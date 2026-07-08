@@ -1,8 +1,8 @@
-package com.kanban.tasklist;
+package com.kanban.models.tasklist;
 
 import java.util.UUID;
 
-import com.kanban.board.Board;
+import com.kanban.models.board.Board;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

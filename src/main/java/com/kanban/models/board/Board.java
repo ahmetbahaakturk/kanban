@@ -1,4 +1,4 @@
-package com.kanban.board;
+package com.kanban.models.board;
 
 import java.time.Instant;
 

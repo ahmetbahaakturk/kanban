@@ -1,4 +1,4 @@
-package com.kanban.tasklist;
+package com.kanban.models.tasklist;
 
 public enum TaskListType {
     BACKLOG,
