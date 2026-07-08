@@ -4,7 +4,7 @@ CREATE TABLE boards (
 );
 
 CREATE TABLE task_lists(
-    id uuid PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     board_public_id varchar(50) NOT NULL,
     type varchar(20) NOT NULL,
     CONSTRAINT fk_task_lists_board FOREIGN KEY (board_public_id) REFERENCES boards (public_id) ON DELETE CASCADE,
