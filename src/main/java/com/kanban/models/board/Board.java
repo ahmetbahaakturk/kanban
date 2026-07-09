@@ -7,12 +7,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Setter;
 
 @Entity
 @Table(name = "boards")
 @Data
+@Builder
 public class Board {
     @Id
     @Column(nullable = false, length = 50)
