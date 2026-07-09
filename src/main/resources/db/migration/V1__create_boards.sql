@@ -15,20 +15,13 @@ CREATE INDEX idx_task_lists_board_public_id ON task_lists (board_public_id);
 
 CREATE TABLE cards(
     id BIGSERIAL PRIMARY KEY,
+    task_list_id bigint NOT NULL,
     title varchar(150) NOT NULL,
     text text,
-    color_code varchar(7) NOT NULL
-);
-
-CREATE TABLE task_list_cards(
-    id BIGSERIAL PRIMARY KEY,
-    task_list_id bigint NOT NULL,
-    card_id bigint NOT NULL,
     position integer NOT NULL,
-    CONSTRAINT fk_task_list_cards_task_list FOREIGN KEY (task_list_id) REFERENCES task_lists (id) ON DELETE CASCADE,
-    CONSTRAINT fk_task_list_cards_card FOREIGN KEY (card_id) REFERENCES cards (id) ON DELETE CASCADE,
-    CONSTRAINT uq_task_list_cards_card UNIQUE (card_id),
-    CONSTRAINT uq_task_list_cards_task_list_position UNIQUE (task_list_id, position)
+    color_code varchar(7) NOT NULL,
+    CONSTRAINT fk_cards_task_list FOREIGN KEY (task_list_id) REFERENCES task_lists (id) ON DELETE CASCADE,
+    CONSTRAINT uq_cards_task_list_position UNIQUE (task_list_id, position)
 );
 
-CREATE INDEX idx_task_list_cards_task_list_id ON task_list_cards (task_list_id);
+CREATE INDEX idx_cards_task_list_id ON cards (task_list_id);
