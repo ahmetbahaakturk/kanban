@@ -11,7 +11,7 @@ class BoardUtilsTests {
         String publicId = BoardUtils.generatePublicId();
 
         assertThat(publicId)
-            .hasSizeBetween(BoardUtils.MIN_LENGTH, BoardUtils.MAX_LENGTH)
+            .hasSizeBetween(BoardUtils.MIN_GENERATED_PUBLIC_ID_LENGTH, BoardUtils.MAX_GENERATED_PUBLIC_ID_LENGTH)
             .matches("^[A-Za-z0-9_-]+$");
     }
 }
