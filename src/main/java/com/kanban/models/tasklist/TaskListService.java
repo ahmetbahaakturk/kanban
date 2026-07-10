@@ -12,7 +12,7 @@ import java.util.List;
 public class TaskListService {
     private final TaskListRepository repository;
 
-    public List<TaskList> createTaskLists(Board board) {
+    public void createTaskLists(Board board) {
         List<TaskList> taskListsToSave = new ArrayList<>();
 
         for (TaskListType type : TaskListType.values()) {
@@ -24,6 +24,6 @@ public class TaskListService {
             taskListsToSave.add(taskListToSave);
         }
 
-        return repository.saveAll(taskListsToSave);
+        repository.saveAll(taskListsToSave);
     }
 }
