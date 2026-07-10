@@ -104,6 +104,8 @@ function App() {
   const [board, setBoard] = useState(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [modalMode, setModalMode] = useState(null)
+  const [modalPublicId, setModalPublicId] = useState('')
 
   const visibleTaskLists = useMemo(() => {
     const taskLists = board?.taskLists ?? []
@@ -135,7 +137,7 @@ function App() {
     const trimmedPublicId = nextPublicId.trim()
 
     if (!trimmedPublicId) {
-      return
+      return false
     }
 
     setLoading(true)
@@ -155,9 +157,12 @@ function App() {
       if (options.replaceUrl !== false) {
         window.history.pushState(null, '', `/boards/${encodeURIComponent(data.publicId)}`)
       }
+
+      return true
     } catch (error) {
       setBoard(null)
       setMessage(error.message)
+      return false
     } finally {
       setLoading(false)
     }
@@ -167,7 +172,7 @@ function App() {
     const trimmedPublicId = nextPublicId.trim()
 
     if (!trimmedPublicId) {
-      return
+      return false
     }
 
     setLoading(true)
@@ -187,12 +192,30 @@ function App() {
         throw new Error(data?.message ?? 'Board could not be created.')
       }
 
-      await loadBoard(data.publicId)
-      setMessage('Board created.')
+      const loaded = await loadBoard(data.publicId)
+
+      if (loaded) {
+        setMessage('Board created.')
+      }
+
+      return loaded
     } catch (error) {
       setBoard(null)
       setMessage(error.message)
       setLoading(false)
+      return false
+    }
+  }
+
+  function openModal(mode) {
+    setModalMode(mode)
+    setModalPublicId(publicId)
+    setMessage('')
+  }
+
+  function closeModal() {
+    if (!loading) {
+      setModalMode(null)
     }
   }
 
@@ -202,15 +225,16 @@ function App() {
     window.history.pushState(null, '', '/')
   }
 
-  function handleSubmit(event, action) {
+  async function handleModalSubmit(event) {
     event.preventDefault()
 
-    if (action === 'create') {
-      createBoard(publicId)
-      return
-    }
+    const success = modalMode === 'create'
+      ? await createBoard(modalPublicId)
+      : await loadBoard(modalPublicId)
 
-    loadBoard(publicId)
+    if (success) {
+      setModalMode(null)
+    }
   }
 
   if (!board) {
@@ -223,31 +247,54 @@ function App() {
             <PreviewBoard />
           </div>
 
-          <form className="panel" onSubmit={(event) => handleSubmit(event, 'find')}>
+          <div className="panel">
             <h2>Board key</h2>
-            <label htmlFor="publicId">Public id</label>
-            <input
-              id="publicId"
-              name="publicId"
-              value={publicId}
-              onChange={(event) => setPublicId(event.target.value)}
-              autoComplete="off"
-              placeholder="roadmap-2026"
-              minLength="5"
-              maxLength="60"
-              required
-            />
             <div className="actions">
-              <button type="button" onClick={(event) => handleSubmit(event, 'create')} disabled={loading}>
+              <button type="button" onClick={() => openModal('create')} disabled={loading}>
                 Create
               </button>
-              <button type="submit" disabled={loading}>
+              <button type="button" onClick={() => openModal('find')} disabled={loading}>
                 Find
               </button>
             </div>
             {message ? <p className="message">{message}</p> : <p className="hint">Spring API is proxied through /api.</p>}
-          </form>
+          </div>
         </section>
+
+        {modalMode ? (
+          <div className="modal-backdrop" role="presentation" onMouseDown={closeModal}>
+            <form
+              className="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modalTitle"
+              onSubmit={handleModalSubmit}
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <button className="modal-close" type="button" onClick={closeModal} aria-label="Close">
+                x
+              </button>
+              <h2 id="modalTitle">{modalMode === 'create' ? 'Create board' : 'Find board'}</h2>
+              <label htmlFor="modalPublicId">Public id</label>
+              <input
+                id="modalPublicId"
+                name="publicId"
+                value={modalPublicId}
+                onChange={(event) => setModalPublicId(event.target.value)}
+                autoComplete="off"
+                placeholder="roadmap-2026"
+                minLength="5"
+                maxLength="60"
+                required
+                autoFocus
+              />
+              <button className="modal-submit" type="submit" disabled={loading}>
+                {modalMode === 'create' ? 'Create' : 'Find'}
+              </button>
+              {message ? <p className="message">{message}</p> : null}
+            </form>
+          </div>
+        ) : null}
       </main>
     )
   }

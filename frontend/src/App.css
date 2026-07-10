@@ -81,7 +81,8 @@
   line-height: 1.1;
 }
 
-.panel label {
+.panel label,
+.modal label {
   display: block;
   margin-bottom: 9px;
   color: var(--muted);
@@ -90,7 +91,8 @@
   text-transform: uppercase;
 }
 
-.panel input {
+.panel input,
+.modal input {
   width: 100%;
   height: 54px;
   border: 1px solid var(--line);
@@ -103,7 +105,8 @@
   padding: 0 15px;
 }
 
-.panel input:focus {
+.panel input:focus,
+.modal input:focus {
   border-color: var(--purple);
   box-shadow: 0 0 0 3px rgba(107, 110, 208, 0.22);
 }
@@ -148,6 +151,70 @@
 
 .message {
   color: var(--text);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 22px;
+}
+
+.modal {
+  position: relative;
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--column);
+  padding: 24px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.58);
+}
+
+.modal h2 {
+  margin: 0 40px 22px 0;
+  color: var(--text);
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-submit {
+  width: 100%;
+  height: 52px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.modal-submit:disabled {
+  cursor: wait;
+  opacity: 0.68;
 }
 
 .board-page {
