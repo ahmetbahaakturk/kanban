@@ -1,13 +1,18 @@
 package com.kanban.models.board.dto;
 
-import com.kanban.models.board.BoardUtils;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 public record BoardCreateRequest(
-        @Size(
-                min = BoardUtils.MIN_PUBLIC_ID_LENGTH,
-                max = BoardUtils.MAX_PUBLIC_ID_LENGTH
-        )
-        String publicId
+        @Valid
+        @NotNull(message = "publicId is required")
+        PublicId publicId
 ) {
+    public BoardCreateRequest(String publicId) {
+        this(new PublicId(publicId));
+    }
+
+    public String publicIdValue() {
+        return publicId.value();
+    }
 }

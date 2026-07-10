@@ -14,7 +14,7 @@ public class BoardMapper {
 
     public Board toBoard(BoardCreateRequest request) {
         return Board.builder()
-                .publicId(request.publicId())
+                .publicId(request.publicIdValue())
                 .createdDate(Instant.now())
                 .build();
     }

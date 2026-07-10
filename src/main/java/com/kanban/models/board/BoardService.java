@@ -5,6 +5,7 @@ import com.kanban.exceptions.NotFoundException;
 import com.kanban.models.board.dto.BoardDetailResponse;
 import com.kanban.models.board.dto.BoardCreateRequest;
 import com.kanban.models.board.dto.BoardResponse;
+import com.kanban.models.board.dto.PublicId;
 import com.kanban.models.card.Card;
 import com.kanban.models.card.CardRepository;
 import com.kanban.models.tasklist.TaskList;
@@ -33,8 +34,10 @@ public class BoardService {
 
     @Transactional
     public BoardResponse createBoard(BoardCreateRequest request) {
-        if (repository.existsById(request.publicId())) {
-            throw new AlreadyExistsException("Board already exists with publicId: " + request.publicId());
+        String publicId = request.publicIdValue();
+
+        if (repository.existsById(publicId)) {
+            throw new AlreadyExistsException("Board already exists with publicId: " + publicId);
         }
 
         Board boardToSave = boardMapper.toBoard(request);
@@ -43,7 +46,7 @@ public class BoardService {
         try {
             savedBoard = repository.save(boardToSave);
         } catch (DataIntegrityViolationException exception) {
-            throw new AlreadyExistsException("Board already exists with publicId: " + request.publicId());
+            throw new AlreadyExistsException("Board already exists with publicId: " + publicId);
         }
 
         taskListService.createTaskLists(savedBoard);
@@ -52,7 +55,13 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public BoardDetailResponse getBoardDetail(String publicId) {
+    public boolean isAvailable(PublicId publicId) {
+        return !repository.existsById(publicId.value());
+    }
+
+    @Transactional(readOnly = true)
+    public BoardDetailResponse getBoardDetail(PublicId requestedPublicId) {
+        String publicId = requestedPublicId.value();
         Board board = repository.findById(publicId)
                 .orElseThrow(() -> new NotFoundException("Board not found with publicId: " + publicId));
         List<TaskList> taskLists = taskListRepository.findAllByBoard_PublicIdOrderByIdAsc(publicId);
