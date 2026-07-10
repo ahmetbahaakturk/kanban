@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kanbab Board</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --column: #252525;
+            --text: #f5f5f5;
+            --muted: #b7b7b7;
+            --pink: #c742a7;
+            --red: #df3035;
+            --blue: #327edc;
+            --purple: #6b6ed0;
+            --teal: #0cae96;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        main {
+            width: min(1370px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 66px 0 84px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: end;
+            margin-bottom: 54px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(40px, 5vw, 72px);
+            line-height: 0.95;
+            letter-spacing: 0;
+        }
+
+        .meta {
+            color: var(--muted);
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .meta strong {
+            display: block;
+            margin-top: 5px;
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(250px, 1fr));
+            align-items: start;
+            gap: 18px;
+        }
+
+        .column {
+            background: var(--column);
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+        }
+
+        .column h2 {
+            margin: 0 0 16px;
+            font-size: 28px;
+            line-height: 1.08;
+            text-shadow: 0 3px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .cards {
+            display: grid;
+            gap: 13px;
+        }
+
+        .card {
+            min-height: 88px;
+            border-radius: 6px;
+            padding: 20px 18px;
+        }
+
+        .card h3 {
+            margin: 0 0 12px;
+            font-size: 14px;
+            line-height: 1.2;
+            color: white;
+        }
+
+        .card p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .pink { background: var(--pink); }
+        .red { background: var(--red); }
+        .blue { background: var(--blue); }
+        .purple { background: var(--purple); }
+        .teal { background: var(--teal); }
+
+        .empty {
+            min-height: 88px;
+            border-radius: 6px;
+            border: 1px dashed #4a4a4a;
+            color: #888;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+        }
+
+        @media (max-width: 1120px) {
+            .board {
+                grid-template-columns: repeat(2, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                width: min(100% - 28px, 440px);
+                padding-top: 34px;
+            }
+
+            header {
+                display: block;
+                margin-bottom: 28px;
+            }
+
+            .meta {
+                margin-top: 12px;
+                text-align: left;
+            }
+
+            .board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <div>
+            <h1>Roadmap</h1>
+        </div>
+        <div class="meta">
+            Public id
+            <strong id="publicId">roadmap-2026</strong>
+        </div>
+    </header>
+
+    <section class="board" aria-label="Kanban board">
+        <article class="column">
+            <h2>Backlog</h2>
+            <div class="cards">
+                <div class="card pink">
+                    <h3>Twilio integration</h3>
+                    <p>Create new note via SMS. Support text, audio, links, and media.</p>
+                </div>
+                <div class="card purple">
+                    <h3>Markdown support</h3>
+                    <p>Markdown shorthand converts to formatting.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="column">
+            <h2>To do</h2>
+            <div class="cards">
+                <div class="card red">
+                    <h3>Tablet view</h3>
+                    <p>Layout pass for medium screens.</p>
+                </div>
+                <div class="card red">
+                    <h3>Mobile view</h3>
+                    <p>Functions for both web responsive and native apps.</p>
+                </div>
+                <div class="card purple">
+                    <h3>Audio recording in note</h3>
+                    <p>Show audio in a note and playback UI.</p>
+                </div>
+                <div class="card purple">
+                    <h3>Bookmark in note</h3>
+                    <p>Show rich link UI in a note and render website screenshot.</p>
+                </div>
+                <div class="card purple">
+                    <h3>Image viewer</h3>
+                    <p>Opens when clicking on the thumbnail in the list or image in note.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="column">
+            <h2>In progress</h2>
+            <div class="cards">
+                <div class="card red">
+                    <h3>Desktop view</h3>
+                    <p>PWA for website and native apps. Note: Windows and Mac need unique share icons.</p>
+                </div>
+                <div class="card blue">
+                    <h3>Mobile home screen</h3>
+                    <p>Folders, tags, and notes lists are sorted by recent.</p>
+                </div>
+                <div class="card blue">
+                    <h3>Formatting options</h3>
+                    <p>Mobile formatting bar expands and collapses when tapping the format icon.</p>
+                </div>
+                <div class="card purple">
+                    <h3>Media in note</h3>
+                    <p>Image and video with player UI.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="column">
+            <h2>Done</h2>
+            <div class="cards">
+                <div class="card teal">
+                    <h3>Audio recording</h3>
+                    <p>Interface for when recording a new audio note.</p>
+                </div>
+                <div class="card teal">
+                    <h3>Bookmarking</h3>
+                    <p>Interface for when creating a new link note.</p>
+                </div>
+            </div>
+        </article>
+    </section>
+</main>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const publicId = params.get("publicId");
+
+    if (publicId) {
+        document.querySelector("#publicId").textContent = publicId;
+    }
+</script>
+</body>
+</html>
