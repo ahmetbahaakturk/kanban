@@ -12,15 +12,23 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleAlreadyExists(AlreadyExistsException exception) {
-        HttpStatus status = HttpStatus.CONFLICT;
+        return buildErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
+    }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException exception) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message) {
         return ResponseEntity
                 .status(status)
                 .body(new ErrorResponse(
                         Instant.now(),
                         status.value(),
                         status.getReasonPhrase(),
-                        exception.getMessage()
+                        message
                 ));
     }
 }
+
