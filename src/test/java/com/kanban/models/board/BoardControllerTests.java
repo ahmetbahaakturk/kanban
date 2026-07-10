@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.kanban.models.board.dto.BoardCreateRequest;
 import com.kanban.models.board.dto.BoardDetailResponse;
 import com.kanban.models.board.dto.BoardResponse;
+import com.kanban.models.board.dto.PublicId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -31,18 +32,31 @@ class BoardControllerTests {
     }
 
     @Test
+    void isAvailableDelegatesToService() {
+        PublicId publicId = new PublicId("board-1");
+
+        when(boardService.isAvailable(publicId)).thenReturn(true);
+
+        Boolean result = controller.isAvailable(publicId);
+
+        assertThat(result).isTrue();
+        verify(boardService).isAvailable(publicId);
+    }
+
+    @Test
     void getBoardDetailDelegatesToService() {
+        PublicId publicId = new PublicId("board-1");
         BoardDetailResponse response = new BoardDetailResponse(
                 "board-1",
                 Instant.parse("2026-07-10T12:00:00Z"),
                 List.of()
         );
 
-        when(boardService.getBoardDetail("board-1")).thenReturn(response);
+        when(boardService.getBoardDetail(publicId)).thenReturn(response);
 
-        BoardDetailResponse result = controller.getBoardDetail("board-1");
+        BoardDetailResponse result = controller.getBoardDetail(publicId);
 
         assertThat(result).isEqualTo(response);
-        verify(boardService).getBoardDetail("board-1");
+        verify(boardService).getBoardDetail(publicId);
     }
 }

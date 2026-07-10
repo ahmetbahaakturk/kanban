@@ -12,6 +12,7 @@ import com.kanban.exceptions.NotFoundException;
 import com.kanban.models.board.dto.BoardCreateRequest;
 import com.kanban.models.board.dto.BoardDetailResponse;
 import com.kanban.models.board.dto.BoardResponse;
+import com.kanban.models.board.dto.PublicId;
 import com.kanban.models.card.Card;
 import com.kanban.models.card.CardRepository;
 import com.kanban.models.tasklist.TaskList;
@@ -134,7 +135,7 @@ class BoardServiceTests {
         when(taskListMapper.toTaskListResponse(done, List.of())).thenReturn(doneResponse);
         when(boardMapper.toBoardDetailResponse(board, List.of(backlogResponse, doneResponse))).thenReturn(response);
 
-        BoardDetailResponse result = service.getBoardDetail("board-1");
+        BoardDetailResponse result = service.getBoardDetail(new PublicId("board-1"));
 
         assertThat(result).isEqualTo(response);
         verify(cardRepository).findAllByTaskListInOrderByPositionAsc(List.of(backlog, done));
@@ -145,7 +146,7 @@ class BoardServiceTests {
     void getBoardDetailThrowsNotFoundWhenBoardDoesNotExist() {
         when(repository.findById("missing-board")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getBoardDetail("missing-board"))
+        assertThatThrownBy(() -> service.getBoardDetail(new PublicId("missing-board")))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Board not found with publicId: missing-board");
 
