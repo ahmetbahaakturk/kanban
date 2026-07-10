@@ -22,4 +22,18 @@ class GlobalExceptionHandlerTests {
         assertThat(response.getBody().message()).isEqualTo("Board already exists");
         assertThat(response.getBody().timestamp()).isNotNull();
     }
+
+    @Test
+    void handleNotFoundReturnsNotFoundResponse() {
+        ResponseEntity<ErrorResponse> response = handler.handleNotFound(
+                new NotFoundException("Board not found")
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().status()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        assertThat(response.getBody().error()).isEqualTo(HttpStatus.NOT_FOUND.getReasonPhrase());
+        assertThat(response.getBody().message()).isEqualTo("Board not found");
+        assertThat(response.getBody().timestamp()).isNotNull();
+    }
 }
