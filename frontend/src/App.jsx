@@ -196,6 +196,12 @@ function App() {
     }
   }
 
+  function showLanding() {
+    setBoard(null)
+    setMessage('')
+    window.history.pushState(null, '', '/')
+  }
+
   function handleSubmit(event, action) {
     event.preventDefault()
 
@@ -250,14 +256,10 @@ function App() {
     <main className="board-page">
       <header className="board-header">
         <div>
-          <button className="text-button" type="button" onClick={() => setBoard(null)}>
+          <button className="text-button" type="button" onClick={showLanding}>
             Change board
           </button>
-          <h1>Roadmap</h1>
-        </div>
-        <div className="meta">
-          Public id
-          <strong>{board.publicId}</strong>
+          <h1>{board.publicId}</h1>
         </div>
       </header>
 
