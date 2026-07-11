@@ -21,6 +21,8 @@ CREATE TABLE cards(
     position integer NOT NULL,
     color_code varchar(7) NOT NULL,
     CONSTRAINT fk_cards_task_list FOREIGN KEY (task_list_id) REFERENCES task_lists (id) ON DELETE CASCADE,
+
+    -- Prevent cards in the same task list from sharing the same position.
     CONSTRAINT uq_cards_task_list_position UNIQUE (task_list_id, position)
 );
 

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kanban.models.card.dto.CardCreateRequest;
+import com.kanban.models.card.dto.CardMoveRequest;
 import com.kanban.models.card.dto.CardResponse;
 import org.junit.jupiter.api.Test;
 
@@ -24,5 +25,18 @@ class CardControllerTests {
 
         assertThat(result).isEqualTo(response);
         verify(cardService).createCard(request);
+    }
+
+    @Test
+    void moveCardDelegatesToService() {
+        CardMoveRequest request = new CardMoveRequest(2L, 1);
+        CardResponse response = new CardResponse(10L, "Card title", "Card text", "#327edc", 1);
+
+        when(cardService.moveCard(10L, request)).thenReturn(response);
+
+        CardResponse result = controller.moveCard(10L, request);
+
+        assertThat(result).isEqualTo(response);
+        verify(cardService).moveCard(10L, request);
     }
 }

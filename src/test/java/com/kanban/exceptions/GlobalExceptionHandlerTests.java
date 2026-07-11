@@ -10,6 +10,20 @@ class GlobalExceptionHandlerTests {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
+    void handleBadRequestReturnsBadRequestResponse() {
+        ResponseEntity<ErrorResponse> response = handler.handleBadRequest(
+                new BadRequestException("targetPosition must be between 1 and 3")
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().status()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.getBody().error()).isEqualTo(HttpStatus.BAD_REQUEST.getReasonPhrase());
+        assertThat(response.getBody().message()).isEqualTo("targetPosition must be between 1 and 3");
+        assertThat(response.getBody().timestamp()).isNotNull();
+    }
+
+    @Test
     void handleAlreadyExistsReturnsConflictResponse() {
         ResponseEntity<ErrorResponse> response = handler.handleAlreadyExists(
                 new AlreadyExistsException("Board already exists")

@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface CardRepository extends JpaRepository<Card, Long> {
     List<Card> findAllByTaskListInOrderByPositionAsc(List<TaskList> taskLists);
 
+    List<Card> findAllByTaskList_IdOrderByPositionAsc(Long taskListId);
+
     @Query("select max(card.position) from Card card where card.taskList.id = :taskListId")
     Optional<Integer> findMaxPositionByTaskListId(Long taskListId);
 }

@@ -10,6 +10,11 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException exception) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleAlreadyExists(AlreadyExistsException exception) {
         return buildErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
@@ -31,4 +36,3 @@ public class GlobalExceptionHandler {
                 ));
     }
 }
-
