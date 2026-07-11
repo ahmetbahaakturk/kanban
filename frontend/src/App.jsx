@@ -1,79 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import BoardActionModal from './components/BoardActionModal'
+import BoardPage from './components/BoardPage'
+import LandingPage from './components/LandingPage'
+import { taskListLabels, taskListOrder } from './constants/kanban'
 import './App.css'
-
-const taskListLabels = {
-  BACKLOG: 'Backlog',
-  TO_DO: 'To do',
-  IN_PROGRESS: 'In progress',
-  DONE: 'Done',
-}
-
-const taskListOrder = ['BACKLOG', 'TO_DO', 'IN_PROGRESS', 'DONE']
-
-const fallbackCards = {
-  BACKLOG: [
-    {
-      id: 'mock-backlog-1',
-      title: 'Twilio integration',
-      text: 'Create new note via SMS. Support text, audio, links, and media.',
-      colorCode: '#c742a7',
-    },
-    {
-      id: 'mock-backlog-2',
-      title: 'Markdown support',
-      text: 'Markdown shorthand converts to formatting.',
-      colorCode: '#6b6ed0',
-    },
-  ],
-  TO_DO: [
-    {
-      id: 'mock-todo-1',
-      title: 'Tablet view',
-      text: 'Layout pass for medium screens.',
-      colorCode: '#df3035',
-    },
-    {
-      id: 'mock-todo-2',
-      title: 'Mobile view',
-      text: 'Functions for both web responsive and native apps.',
-      colorCode: '#df3035',
-    },
-    {
-      id: 'mock-todo-3',
-      title: 'Audio recording in note',
-      text: 'Show audio in a note and playback UI.',
-      colorCode: '#6b6ed0',
-    },
-  ],
-  IN_PROGRESS: [
-    {
-      id: 'mock-progress-1',
-      title: 'Desktop view',
-      text: 'PWA for website and native apps. Windows and Mac need unique share icons.',
-      colorCode: '#df3035',
-    },
-    {
-      id: 'mock-progress-2',
-      title: 'Mobile home screen',
-      text: 'Folders, tags, and notes lists are sorted by recent.',
-      colorCode: '#327edc',
-    },
-  ],
-  DONE: [
-    {
-      id: 'mock-done-1',
-      title: 'Audio recording',
-      text: 'Interface for when recording a new audio note.',
-      colorCode: '#0cae96',
-    },
-    {
-      id: 'mock-done-2',
-      title: 'Bookmarking',
-      text: 'Interface for when creating a new link note.',
-      colorCode: '#0cae96',
-    },
-  ],
-}
 
 function readPublicIdFromUrl() {
   const pathMatch = window.location.pathname.match(/^\/boards\/([^/]+)$/)
@@ -106,6 +36,8 @@ function App() {
   const [message, setMessage] = useState('')
   const [modalMode, setModalMode] = useState(null)
   const [modalPublicId, setModalPublicId] = useState('')
+  const [cardComposerTaskList, setCardComposerTaskList] = useState(null)
+  const [cardMessage, setCardMessage] = useState('')
 
   const visibleTaskLists = useMemo(() => {
     const taskLists = board?.taskLists ?? []
@@ -207,6 +139,97 @@ function App() {
     }
   }
 
+  async function createCard(taskList, request) {
+    setLoading(true)
+    setCardMessage('')
+
+    try {
+      const response = await fetch('/api/cards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          taskListId: taskList.id,
+          title: request.title,
+          text: request.text,
+        }),
+      })
+      const data = await parseResponse(response)
+
+      if (!response.ok) {
+        throw new Error(data?.message ?? 'Card could not be created.')
+      }
+
+      const refreshed = await loadBoard(board.publicId, { replaceUrl: false })
+
+      if (!refreshed) {
+        throw new Error('Card was created, but board could not be refreshed.')
+      }
+
+      return true
+    } catch (error) {
+      setCardMessage(error.message)
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function updateBoardTaskLists(taskLists) {
+    setBoard((currentBoard) => {
+      if (!currentBoard) {
+        return currentBoard
+      }
+
+      return {
+        ...currentBoard,
+        taskLists: taskLists.map((taskList) => ({
+          id: taskList.id,
+          type: taskList.type,
+          cards: taskList.cards.map((card, index) => ({
+            ...card,
+            position: index + 1,
+          })),
+        })),
+      }
+    })
+  }
+
+  async function moveCard(card, targetTaskListId, targetPosition, nextTaskLists) {
+    const previousBoard = board
+
+    setMessage('')
+    updateBoardTaskLists(nextTaskLists)
+
+    try {
+      const response = await fetch(`/api/cards/${card.id}/move`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetTaskListId,
+          targetPosition,
+        }),
+      })
+      const data = await parseResponse(response)
+
+      if (!response.ok) {
+        throw new Error(data?.message ?? 'Card could not be moved.')
+      }
+
+      const refreshed = await loadBoard(previousBoard.publicId, { replaceUrl: false })
+
+      if (!refreshed) {
+        setBoard(previousBoard)
+      }
+    } catch (error) {
+      setBoard(previousBoard)
+      setMessage(error.message)
+    }
+  }
+
   function openModal(mode) {
     setModalMode(mode)
     setModalPublicId(publicId)
@@ -216,6 +239,17 @@ function App() {
   function closeModal() {
     if (!loading) {
       setModalMode(null)
+    }
+  }
+
+  function openCardComposer(taskList) {
+    setCardComposerTaskList(taskList)
+    setCardMessage('')
+  }
+
+  function closeCardComposer() {
+    if (!loading) {
+      setCardComposerTaskList(null)
     }
   }
 
@@ -237,114 +271,49 @@ function App() {
     }
   }
 
+  async function handleCardSubmit(taskList, request) {
+    const success = await createCard(taskList, request)
+
+    if (success) {
+      setCardComposerTaskList(null)
+    }
+  }
+
   if (!board) {
     return (
       <main className="landing">
-        <section className="landing-grid">
-          <div className="intro">
-            <h1>Kanbab</h1>
-            <p>Open a board with a public id, or create a fresh board using the same key.</p>
-            <PreviewBoard />
-          </div>
-
-          <div className="panel">
-            <h2>Board key</h2>
-            <div className="actions">
-              <button type="button" onClick={() => openModal('create')} disabled={loading}>
-                Create
-              </button>
-              <button type="button" onClick={() => openModal('find')} disabled={loading}>
-                Find
-              </button>
-            </div>
-            {message ? <p className="message">{message}</p> : <p className="hint">Spring API is proxied through /api.</p>}
-          </div>
-        </section>
-
+        <LandingPage loading={loading} message={message} onOpenModal={openModal} />
         {modalMode ? (
-          <div className="modal-backdrop" role="presentation" onMouseDown={closeModal}>
-            <form
-              className="modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="modalTitle"
-              onSubmit={handleModalSubmit}
-              onMouseDown={(event) => event.stopPropagation()}
-            >
-              <button className="modal-close" type="button" onClick={closeModal} aria-label="Close">
-                x
-              </button>
-              <h2 id="modalTitle">{modalMode === 'create' ? 'Create board' : 'Find board'}</h2>
-              <label htmlFor="modalPublicId">Public id</label>
-              <input
-                id="modalPublicId"
-                name="publicId"
-                value={modalPublicId}
-                onChange={(event) => setModalPublicId(event.target.value)}
-                autoComplete="off"
-                placeholder="roadmap-2026"
-                minLength="5"
-                maxLength="60"
-                required
-                autoFocus
-              />
-              <button className="modal-submit" type="submit" disabled={loading}>
-                {modalMode === 'create' ? 'Create' : 'Find'}
-              </button>
-              {message ? <p className="message">{message}</p> : null}
-            </form>
-          </div>
+          <BoardActionModal
+            loading={loading}
+            message={message}
+            mode={modalMode}
+            publicId={modalPublicId}
+            onClose={closeModal}
+            onPublicIdChange={setModalPublicId}
+            onSubmit={handleModalSubmit}
+          />
         ) : null}
       </main>
     )
   }
 
   return (
-    <main className="board-page">
-      <header className="board-header">
-        <div>
-          <button className="text-button" type="button" onClick={showLanding}>
-            Change board
-          </button>
-          <h1>{board.publicId}</h1>
-        </div>
-      </header>
-
-      <section className="board" aria-label="Kanban board">
-        {visibleTaskLists.map((taskList) => (
-          <article className="column" key={taskList.id}>
-            <h2>{taskList.title}</h2>
-            <div className="cards">
-              {taskList.cards.length ? (
-                taskList.cards.map((card) => (
-                  <div className="card" style={{ backgroundColor: card.colorCode }} key={card.id}>
-                    <h3>{card.title}</h3>
-                    <p>{card.text}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-card">No cards</div>
-              )}
-            </div>
-          </article>
-        ))}
-      </section>
-    </main>
-  )
-}
-
-function PreviewBoard() {
-  return (
-    <div className="preview" aria-hidden="true">
-      {taskListOrder.map((type) => (
-        <div className="mini-column" key={type}>
-          <div className="mini-title" />
-          {fallbackCards[type].slice(0, type === 'TO_DO' ? 3 : 2).map((card) => (
-            <div className="mini-card" style={{ backgroundColor: card.colorCode }} key={card.id} />
-          ))}
-        </div>
-      ))}
-    </div>
+    <>
+      <BoardPage
+        board={board}
+        cardComposerTaskListId={cardComposerTaskList?.id}
+        cardMessage={cardMessage}
+        loading={loading}
+        message={message}
+        taskLists={visibleTaskLists}
+        onAddCard={openCardComposer}
+        onCancelCard={closeCardComposer}
+        onChangeBoard={showLanding}
+        onCreateCard={handleCardSubmit}
+        onMoveCard={moveCard}
+      />
+    </>
   )
 }
 
