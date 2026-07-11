@@ -12,7 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(
@@ -22,7 +23,8 @@ import lombok.Data;
         columnNames = {"task_list_id", "position"}
     )
 )
-@Data
+@Getter
+@Setter
 public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
