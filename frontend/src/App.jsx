@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import BoardActionModal from './components/BoardActionModal'
 import BoardPage from './components/BoardPage'
+import CardCreateModal from './components/CardCreateModal'
 import LandingPage from './components/LandingPage'
 import { taskListLabels, taskListOrder } from './constants/kanban'
 import './App.css'
@@ -36,7 +37,7 @@ function App() {
   const [message, setMessage] = useState('')
   const [modalMode, setModalMode] = useState(null)
   const [modalPublicId, setModalPublicId] = useState('')
-  const [cardComposerTaskList, setCardComposerTaskList] = useState(null)
+  const [cardModalTaskList, setCardModalTaskList] = useState(null)
   const [cardMessage, setCardMessage] = useState('')
 
   const visibleTaskLists = useMemo(() => {
@@ -242,14 +243,14 @@ function App() {
     }
   }
 
-  function openCardComposer(taskList) {
-    setCardComposerTaskList(taskList)
+  function openCardModal(taskList) {
+    setCardModalTaskList(taskList)
     setCardMessage('')
   }
 
-  function closeCardComposer() {
+  function closeCardModal() {
     if (!loading) {
-      setCardComposerTaskList(null)
+      setCardModalTaskList(null)
     }
   }
 
@@ -271,11 +272,11 @@ function App() {
     }
   }
 
-  async function handleCardSubmit(taskList, request) {
-    const success = await createCard(taskList, request)
+  async function handleCardSubmit(request) {
+    const success = await createCard(cardModalTaskList, request)
 
     if (success) {
-      setCardComposerTaskList(null)
+      setCardModalTaskList(null)
     }
   }
 
@@ -302,17 +303,21 @@ function App() {
     <>
       <BoardPage
         board={board}
-        cardComposerTaskListId={cardComposerTaskList?.id}
-        cardMessage={cardMessage}
-        loading={loading}
         message={message}
         taskLists={visibleTaskLists}
-        onAddCard={openCardComposer}
-        onCancelCard={closeCardComposer}
+        onAddCard={openCardModal}
         onChangeBoard={showLanding}
-        onCreateCard={handleCardSubmit}
         onMoveCard={moveCard}
       />
+      {cardModalTaskList ? (
+        <CardCreateModal
+          loading={loading}
+          message={cardMessage}
+          taskList={cardModalTaskList}
+          onClose={closeCardModal}
+          onSubmit={handleCardSubmit}
+        />
+      ) : null}
     </>
   )
 }

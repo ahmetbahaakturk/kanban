@@ -101,15 +101,10 @@ function moveCardInTaskLists(taskLists, activeDndId, overDndId) {
 
 function BoardPage({
   board,
-  cardComposerTaskListId,
-  cardMessage,
-  loading,
   message,
   taskLists,
   onAddCard,
-  onCancelCard,
   onChangeBoard,
-  onCreateCard,
   onMoveCard,
 }) {
   const [activeCard, setActiveCard] = useState(null)
@@ -235,16 +230,7 @@ function BoardPage({
       >
         <section className="board" aria-label="Kanban board">
           {renderedTaskLists.map((taskList) => (
-            <BoardColumn
-              cardMessage={cardMessage}
-              isCreatingCard={cardComposerTaskListId === taskList.id}
-              loading={loading}
-              taskList={taskList}
-              onAddCard={onAddCard}
-              onCancelCard={onCancelCard}
-              onCreateCard={onCreateCard}
-              key={taskList.id}
-            />
+            <BoardColumn taskList={taskList} onAddCard={onAddCard} key={taskList.id} />
           ))}
         </section>
         <DragOverlay>
