@@ -7,7 +7,7 @@ function BoardActionModal({
   onPublicIdChange,
   onSubmit,
 }) {
-  const actionLabel = mode === 'create' ? 'Create' : 'Find'
+  const actionLabel = mode === 'create' ? 'New board' : 'Open board'
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -16,14 +16,15 @@ function BoardActionModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modalTitle"
+        noValidate
         onSubmit={onSubmit}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <button className="modal-close" type="button" onClick={onClose} aria-label="Close">
           x
         </button>
-        <h2 id="modalTitle">{actionLabel} board</h2>
-        <label htmlFor="modalPublicId">Public id</label>
+        <h2 id="modalTitle">{actionLabel}</h2>
+        <label htmlFor="modalPublicId">Board name</label>
         <input
           id="modalPublicId"
           name="publicId"
@@ -31,13 +32,15 @@ function BoardActionModal({
           onChange={(event) => onPublicIdChange(event.target.value)}
           autoComplete="off"
           placeholder="roadmap-2026"
-          minLength="5"
+          minLength="4"
           maxLength="60"
+          pattern="[A-Za-z0-9._~-]+"
+          title="Use only letters, numbers, dots, dashes, underscores, and tildes."
           required
           autoFocus
         />
         <button className="modal-submit" type="submit" disabled={loading}>
-          {actionLabel}
+          {mode === 'create' ? 'Create board' : 'Open board'}
         </button>
         {message ? <p className="message">{message}</p> : null}
       </form>

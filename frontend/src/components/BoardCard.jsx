@@ -4,6 +4,7 @@ function BoardCard({
   dragAttributes = {},
   dragListeners = {},
   isDragging = false,
+  onDoubleClick,
   setNodeRef,
   style,
 }) {
@@ -15,6 +16,7 @@ function BoardCard({
       {...dragAttributes}
       {...dragListeners}
       aria-pressed={isDragging}
+      onDoubleClick={onDoubleClick}
     >
       <h3>{card.title}</h3>
       <p>{card.text}</p>

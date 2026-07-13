@@ -4,22 +4,22 @@ function LandingPage({ loading, message, onOpenModal }) {
   return (
     <section className="landing-grid">
       <div className="intro">
-        <h1>Kanbab</h1>
-        <p>Open a board with a public id, or create a fresh board using the same key.</p>
+        <h1>Kanban</h1>
+        <p>Create a shared board in seconds, or open one you already use with its board name.</p>
         <PreviewBoard />
       </div>
 
       <div className="panel">
-        <h2>Board key</h2>
+        <h2>Start with a board</h2>
         <div className="actions">
           <button type="button" onClick={() => onOpenModal('create')} disabled={loading}>
-            Create
+            New board
           </button>
           <button type="button" onClick={() => onOpenModal('find')} disabled={loading}>
-            Find
+            Open board
           </button>
         </div>
-        {message ? <p className="message">{message}</p> : <p className="hint">Spring API is proxied through /api.</p>}
+        {message ? <p className="message">{message}</p> : <p className="hint">Use a short name you can share and remember.</p>}
       </div>
     </section>
   )

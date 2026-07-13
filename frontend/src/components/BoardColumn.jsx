@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import SortableBoardCard from './SortableBoardCard'
 
-function BoardColumn({ taskList, onAddCard }) {
+function BoardColumn({ taskList, onAddCard, onEditCard }) {
   const { isOver, setNodeRef } = useDroppable({
     id: `taskList:${taskList.id}`,
     data: {
@@ -31,7 +31,12 @@ function BoardColumn({ taskList, onAddCard }) {
         >
           {taskList.cards.length ? (
             taskList.cards.map((card) => (
-              <SortableBoardCard card={card} taskListId={taskList.id} key={card.id} />
+              <SortableBoardCard
+                card={card}
+                onEditCard={onEditCard}
+                taskListId={taskList.id}
+                key={card.id}
+              />
             ))
           ) : (
             <div className="empty-card">No cards</div>

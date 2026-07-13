@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import BoardCard from './BoardCard'
 
-function SortableBoardCard({ card, taskListId }) {
+function SortableBoardCard({ card, onEditCard, taskListId }) {
   const {
     attributes,
     isDragging,
@@ -32,6 +32,7 @@ function SortableBoardCard({ card, taskListId }) {
       dragAttributes={attributes}
       dragListeners={listeners}
       isDragging={isDragging}
+      onDoubleClick={() => onEditCard(card)}
       setNodeRef={setNodeRef}
       style={style}
     />

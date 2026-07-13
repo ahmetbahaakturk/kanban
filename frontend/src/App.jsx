@@ -2,9 +2,17 @@ import { useEffect, useMemo, useState } from 'react'
 import BoardActionModal from './components/BoardActionModal'
 import BoardPage from './components/BoardPage'
 import CardCreateModal from './components/CardCreateModal'
+import CardEditModal from './components/CardEditModal'
 import LandingPage from './components/LandingPage'
+import RecentBoards from './components/RecentBoards'
 import { taskListLabels, taskListOrder } from './constants/kanban'
 import './App.css'
+
+const RECENT_BOARDS_KEY = 'kanban.recentBoards'
+const RECENT_BOARDS_LIMIT = 10
+const BOARD_NAME_MIN_LENGTH = 4
+const BOARD_NAME_MAX_LENGTH = 60
+const BOARD_NAME_PATTERN = /^[A-Za-z0-9._~-]+$/
 
 function readPublicIdFromUrl() {
   const pathMatch = window.location.pathname.match(/^\/boards\/([^/]+)$/)
@@ -14,6 +22,52 @@ function readPublicIdFromUrl() {
   }
 
   return new URLSearchParams(window.location.search).get('publicId') ?? ''
+}
+
+function readRecentBoards() {
+  try {
+    const parsedItems = JSON.parse(localStorage.getItem(RECENT_BOARDS_KEY) ?? '[]')
+
+    if (!Array.isArray(parsedItems)) {
+      return []
+    }
+
+    return parsedItems.filter((item) => typeof item === 'string')
+  } catch {
+    return []
+  }
+}
+
+function rememberRecentBoard(items, publicId) {
+  const nextItems = [
+    publicId,
+    ...items.filter((item) => item !== publicId),
+  ].slice(0, RECENT_BOARDS_LIMIT)
+
+  localStorage.setItem(RECENT_BOARDS_KEY, JSON.stringify(nextItems))
+
+  return nextItems
+}
+
+function validateBoardName(publicId) {
+  const trimmedPublicId = publicId.trim()
+
+  if (!trimmedPublicId) {
+    return 'Board name is required.'
+  }
+
+  if (
+    trimmedPublicId.length < BOARD_NAME_MIN_LENGTH
+    || trimmedPublicId.length > BOARD_NAME_MAX_LENGTH
+  ) {
+    return `Board name must be between ${BOARD_NAME_MIN_LENGTH} and ${BOARD_NAME_MAX_LENGTH} characters.`
+  }
+
+  if (!BOARD_NAME_PATTERN.test(trimmedPublicId)) {
+    return 'Use only letters, numbers, dots, dashes, underscores, and tildes.'
+  }
+
+  return ''
 }
 
 async function parseResponse(response) {
@@ -36,9 +90,13 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [modalMode, setModalMode] = useState(null)
+  const [modalMessage, setModalMessage] = useState('')
   const [modalPublicId, setModalPublicId] = useState('')
   const [cardModalTaskList, setCardModalTaskList] = useState(null)
   const [cardMessage, setCardMessage] = useState('')
+  const [editingCard, setEditingCard] = useState(null)
+  const [editCardMessage, setEditCardMessage] = useState('')
+  const [recentBoards, setRecentBoards] = useState(readRecentBoards)
 
   const visibleTaskLists = useMemo(() => {
     const taskLists = board?.taskLists ?? []
@@ -68,13 +126,14 @@ function App() {
 
   async function loadBoard(nextPublicId, options = {}) {
     const trimmedPublicId = nextPublicId.trim()
+    const setErrorMessage = options.setErrorMessage ?? setMessage
 
     if (!trimmedPublicId) {
       return false
     }
 
     setLoading(true)
-    setMessage('')
+    setErrorMessage('')
 
     try {
       const response = await fetch(`/api/boards/${encodeURIComponent(trimmedPublicId)}`)
@@ -86,6 +145,7 @@ function App() {
 
       setBoard(data)
       setPublicId(data.publicId)
+      setRecentBoards((items) => rememberRecentBoard(items, data.publicId))
 
       if (options.replaceUrl !== false) {
         window.history.pushState(null, '', `/boards/${encodeURIComponent(data.publicId)}`)
@@ -94,22 +154,23 @@ function App() {
       return true
     } catch (error) {
       setBoard(null)
-      setMessage(error.message)
+      setErrorMessage(error.message)
       return false
     } finally {
       setLoading(false)
     }
   }
 
-  async function createBoard(nextPublicId) {
+  async function createBoard(nextPublicId, options = {}) {
     const trimmedPublicId = nextPublicId.trim()
+    const setErrorMessage = options.setErrorMessage ?? setMessage
 
     if (!trimmedPublicId) {
       return false
     }
 
     setLoading(true)
-    setMessage('')
+    setErrorMessage('')
 
     try {
       const response = await fetch('/api/boards', {
@@ -125,7 +186,9 @@ function App() {
         throw new Error(data?.message ?? 'Board could not be created.')
       }
 
-      const loaded = await loadBoard(data.publicId)
+      const loaded = await loadBoard(data.publicId, {
+        setErrorMessage,
+      })
 
       if (loaded) {
         setMessage('Board created.')
@@ -134,7 +197,7 @@ function App() {
       return loaded
     } catch (error) {
       setBoard(null)
-      setMessage(error.message)
+      setErrorMessage(error.message)
       setLoading(false)
       return false
     }
@@ -177,6 +240,69 @@ function App() {
     }
   }
 
+  async function updateCard(card, request) {
+    setLoading(true)
+    setEditCardMessage('')
+
+    try {
+      const response = await fetch(`/api/cards/${card.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: request.title,
+          text: request.text,
+          colorCode: request.colorCode,
+        }),
+      })
+      const data = await parseResponse(response)
+
+      if (!response.ok) {
+        throw new Error(data?.message ?? 'Card could not be updated.')
+      }
+
+      const refreshed = await loadBoard(board.publicId, { replaceUrl: false })
+
+      if (!refreshed) {
+        throw new Error('Card was updated, but board could not be refreshed.')
+      }
+
+      return true
+    } catch (error) {
+      setEditCardMessage(error.message)
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function deleteCard(cardId) {
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(`/api/cards/${cardId}`, {
+        method: 'DELETE',
+      })
+      const data = await parseResponse(response)
+
+      if (!response.ok) {
+        throw new Error(data?.message ?? 'Card could not be deleted.')
+      }
+
+      const refreshed = await loadBoard(board.publicId, { replaceUrl: false })
+
+      if (!refreshed) {
+        throw new Error('Card was deleted, but board could not be refreshed.')
+      }
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   function updateBoardTaskLists(taskLists) {
     setBoard((currentBoard) => {
       if (!currentBoard) {
@@ -197,27 +323,30 @@ function App() {
     })
   }
 
-  async function moveCard(card, targetTaskListId, targetPosition, nextTaskLists) {
+  async function updateCardOrder(nextTaskLists, affectedTaskListIds) {
     const previousBoard = board
 
     setMessage('')
     updateBoardTaskLists(nextTaskLists)
 
     try {
-      const response = await fetch(`/api/cards/${card.id}/move`, {
-        method: 'PATCH',
+      const taskLists = nextTaskLists
+        .filter((taskList) => affectedTaskListIds.includes(taskList.id))
+        .map((taskList) => ({
+          taskListId: taskList.id,
+          cardIds: taskList.cards.map((card) => card.id),
+        }))
+      const response = await fetch('/api/task-lists/order', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          targetTaskListId,
-          targetPosition,
-        }),
+        body: JSON.stringify({ taskLists }),
       })
       const data = await parseResponse(response)
 
       if (!response.ok) {
-        throw new Error(data?.message ?? 'Card could not be moved.')
+        throw new Error(data?.message ?? 'Card order could not be updated.')
       }
 
       const refreshed = await loadBoard(previousBoard.publicId, { replaceUrl: false })
@@ -234,7 +363,15 @@ function App() {
   function openModal(mode) {
     setModalMode(mode)
     setModalPublicId(publicId)
-    setMessage('')
+    setModalMessage('')
+  }
+
+  function changeModalPublicId(nextPublicId) {
+    setModalPublicId(nextPublicId)
+
+    if (modalMessage) {
+      setModalMessage('')
+    }
   }
 
   function closeModal() {
@@ -254,6 +391,17 @@ function App() {
     }
   }
 
+  function openEditCardModal(card) {
+    setEditingCard(card)
+    setEditCardMessage('')
+  }
+
+  function closeEditCardModal() {
+    if (!loading) {
+      setEditingCard(null)
+    }
+  }
+
   function showLanding() {
     setBoard(null)
     setMessage('')
@@ -263,9 +411,16 @@ function App() {
   async function handleModalSubmit(event) {
     event.preventDefault()
 
+    const validationMessage = validateBoardName(modalPublicId)
+
+    if (validationMessage) {
+      setModalMessage(validationMessage)
+      return
+    }
+
     const success = modalMode === 'create'
-      ? await createBoard(modalPublicId)
-      : await loadBoard(modalPublicId)
+      ? await createBoard(modalPublicId, { setErrorMessage: setModalMessage })
+      : await loadBoard(modalPublicId, { setErrorMessage: setModalMessage })
 
     if (success) {
       setModalMode(null)
@@ -280,18 +435,31 @@ function App() {
     }
   }
 
+  async function handleCardEditSubmit(request) {
+    const success = await updateCard(editingCard, request)
+
+    if (success) {
+      setEditingCard(null)
+    }
+  }
+
   if (!board) {
     return (
       <main className="landing">
         <LandingPage loading={loading} message={message} onOpenModal={openModal} />
+        <RecentBoards
+          currentPublicId={publicId}
+          items={recentBoards}
+          onSelect={(selectedPublicId) => loadBoard(selectedPublicId)}
+        />
         {modalMode ? (
           <BoardActionModal
             loading={loading}
-            message={message}
+            message={modalMessage}
             mode={modalMode}
             publicId={modalPublicId}
             onClose={closeModal}
-            onPublicIdChange={setModalPublicId}
+            onPublicIdChange={changeModalPublicId}
             onSubmit={handleModalSubmit}
           />
         ) : null}
@@ -307,7 +475,14 @@ function App() {
         taskLists={visibleTaskLists}
         onAddCard={openCardModal}
         onChangeBoard={showLanding}
-        onMoveCard={moveCard}
+        onDeleteCard={deleteCard}
+        onEditCard={openEditCardModal}
+        onUpdateCardOrder={updateCardOrder}
+      />
+      <RecentBoards
+        currentPublicId={board.publicId}
+        items={recentBoards}
+        onSelect={(selectedPublicId) => loadBoard(selectedPublicId)}
       />
       {cardModalTaskList ? (
         <CardCreateModal
@@ -316,6 +491,15 @@ function App() {
           taskList={cardModalTaskList}
           onClose={closeCardModal}
           onSubmit={handleCardSubmit}
+        />
+      ) : null}
+      {editingCard ? (
+        <CardEditModal
+          card={editingCard}
+          loading={loading}
+          message={editCardMessage}
+          onClose={closeEditCardModal}
+          onSubmit={handleCardEditSubmit}
         />
       ) : null}
     </>

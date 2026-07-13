@@ -116,6 +116,11 @@
   padding: 14px 15px;
 }
 
+.modal .color-input {
+  height: 54px;
+  padding: 8px;
+}
+
 .panel input:focus,
 .modal input:focus,
 .modal textarea:focus {
@@ -162,7 +167,11 @@
 }
 
 .message {
-  color: var(--text);
+  border: 1px solid rgba(223, 48, 53, 0.55);
+  border-radius: 6px;
+  background: rgba(223, 48, 53, 0.14);
+  color: #ffb4b4;
+  padding: 10px 12px;
 }
 
 .modal-backdrop {
@@ -277,6 +286,36 @@
   min-height: 0;
 }
 
+.delete-drop-zone {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  z-index: 12;
+  min-width: 260px;
+  border: 2px dashed rgba(255, 255, 255, 0.74);
+  border-radius: 8px;
+  background: #b82125;
+  color: #ffffff;
+  opacity: 0;
+  padding: 18px 24px;
+  text-align: center;
+  transform: translate(-50%, -120%);
+  transition: opacity 140ms ease, transform 140ms ease, background-color 140ms ease;
+  font-weight: 900;
+  pointer-events: none;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.5);
+}
+
+.delete-drop-zone.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.delete-drop-zone.over {
+  background: #df3035;
+  transform: translate(-50%, 0) scale(1.04);
+}
+
 .column {
   display: flex;
   flex-direction: column;
@@ -381,6 +420,23 @@
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.52);
 }
 
+.deleting-card-overlay {
+  animation: delete-card-pop 180ms ease-in forwards;
+  transform-origin: center;
+}
+
+@keyframes delete-card-pop {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.18);
+  }
+}
+
 .empty-card {
   min-height: 88px;
   display: grid;
@@ -403,6 +459,113 @@
   color: rgba(255, 255, 255, 0.72);
   font-size: 12px;
   line-height: 1.45;
+}
+
+.recent-boards {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 6;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.recent-board-panel {
+  width: min(240px, calc(100vw - 44px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(26, 26, 26, 0.92);
+  padding: 14px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(10px);
+}
+
+.recent-board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.recent-board-header h2 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.recent-board-toggle,
+.recent-board-close {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.recent-board-toggle {
+  min-width: 92px;
+  height: 38px;
+  border-radius: 999px;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.42);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.recent-board-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.recent-board-toggle:hover,
+.recent-board-close:hover {
+  border-color: #555;
+  background: #252525;
+}
+
+.recent-board-close:hover {
+  color: var(--text);
+}
+
+.recent-board-list {
+  display: grid;
+  gap: 7px;
+  max-height: 270px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.recent-board {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  overflow: hidden;
+  padding: 7px 9px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-board:hover,
+.recent-board.active {
+  border-color: #4a4a4a;
+  background: #252525;
+}
+
+.recent-board.active {
+  color: #ffffff;
+  font-weight: 800;
 }
 
 @media (max-width: 1120px) {
@@ -443,6 +606,15 @@
 
   .column {
     height: 560px;
+  }
+
+  .recent-boards {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .recent-board-panel {
+    width: min(220px, calc(100vw - 28px));
   }
 }
 

@@ -6,10 +6,12 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { arrayMove } from '@dnd-kit/sortable'
 import { useEffect, useRef, useState } from 'react'
 import BoardCard from './BoardCard'
 import BoardColumn from './BoardColumn'
+import CardDeleteDropZone from './CardDeleteDropZone'
+
+const DELETE_ANIMATION_DURATION = 180
 
 function parseCardId(dndId) {
   return String(dndId).replace('card:', '')
@@ -44,7 +46,40 @@ function withCardPositions(taskLists) {
   }))
 }
 
-function moveCardInTaskLists(taskLists, activeDndId, overDndId) {
+function withoutCard(taskLists, cardId) {
+  const normalizedCardId = String(cardId)
+
+  return withCardPositions(taskLists.map((taskList) => ({
+    ...taskList,
+    cards: taskList.cards.filter((card) => String(card.id) !== normalizedCardId),
+  })))
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
+
+function shouldInsertAfterOverCard(event) {
+  if (!String(event.over?.id).startsWith('card:')) {
+    return false
+  }
+
+  const activeRect = event.active.rect.current.translated
+  const overRect = event.over.rect
+
+  if (!activeRect || !overRect) {
+    return false
+  }
+
+  const activeMiddleY = activeRect.top + activeRect.height / 2
+  const overMiddleY = overRect.top + overRect.height / 2
+
+  return activeMiddleY > overMiddleY
+}
+
+function moveCardInTaskLists(taskLists, activeDndId, overDndId, insertAfterOverCard = false) {
   const activeCardId = parseCardId(activeDndId)
   const activeLocation = findCardLocation(taskLists, activeCardId)
 
@@ -65,19 +100,23 @@ function moveCardInTaskLists(taskLists, activeDndId, overDndId) {
       return taskLists
     }
 
-    if (activeLocation.taskList.id === overLocation.taskList.id) {
-      nextTaskLists[activeLocation.taskListIndex].cards = arrayMove(
-        nextTaskLists[activeLocation.taskListIndex].cards,
-        activeLocation.cardIndex,
-        overLocation.cardIndex,
-      )
-
-      return withCardPositions(nextTaskLists)
-    }
+    let targetCardIndex = overLocation.cardIndex + (insertAfterOverCard ? 1 : 0)
 
     nextTaskLists[activeLocation.taskListIndex].cards.splice(activeLocation.cardIndex, 1)
+
+    if (
+      activeLocation.taskList.id === overLocation.taskList.id
+      && activeLocation.cardIndex < targetCardIndex
+    ) {
+      targetCardIndex -= 1
+    }
+
+    targetCardIndex = Math.min(
+      targetCardIndex,
+      nextTaskLists[overLocation.taskListIndex].cards.length,
+    )
     nextTaskLists[overLocation.taskListIndex].cards.splice(
-      overLocation.cardIndex,
+      targetCardIndex,
       0,
       activeLocation.card,
     )
@@ -105,9 +144,12 @@ function BoardPage({
   taskLists,
   onAddCard,
   onChangeBoard,
-  onMoveCard,
+  onDeleteCard,
+  onEditCard,
+  onUpdateCardOrder,
 }) {
   const [activeCard, setActiveCard] = useState(null)
+  const [deletingCard, setDeletingCard] = useState(false)
   const [draftTaskLists, setDraftTaskLists] = useState(null)
   const latestDraftTaskLists = useRef(null)
   const lastOverId = useRef(null)
@@ -122,11 +164,11 @@ function BoardPage({
   const renderedTaskLists = draftTaskLists ?? taskLists
 
   useEffect(() => {
-    if (!activeCard) {
+    if (!activeCard && !deletingCard) {
       setDraftTaskLists(null)
       latestDraftTaskLists.current = null
     }
-  }, [activeCard, taskLists])
+  }, [activeCard, deletingCard, taskLists])
 
   function handleDragStart(event) {
     const cardId = parseCardId(event.active.id)
@@ -138,6 +180,7 @@ function BoardPage({
 
     setActiveCard(location.card)
     setDraftTaskLists(taskLists)
+    setDeletingCard(false)
     latestDraftTaskLists.current = taskLists
     lastOverId.current = null
     hasDraggedOver.current = false
@@ -148,7 +191,14 @@ function BoardPage({
       return
     }
 
-    if (lastOverId.current === event.over.id) {
+    if (event.over.id === 'delete-card') {
+      return
+    }
+
+    const insertAfterOverCard = shouldInsertAfterOverCard(event)
+    const overPlacementKey = `${event.over.id}:${insertAfterOverCard ? 'after' : 'before'}`
+
+    if (lastOverId.current === overPlacementKey) {
       return
     }
 
@@ -156,10 +206,11 @@ function BoardPage({
       latestDraftTaskLists.current ?? taskLists,
       event.active.id,
       event.over.id,
+      insertAfterOverCard,
     )
 
     latestDraftTaskLists.current = nextTaskLists
-    lastOverId.current = event.over.id
+    lastOverId.current = overPlacementKey
     hasDraggedOver.current = true
     setDraftTaskLists(nextTaskLists)
   }
@@ -171,9 +222,36 @@ function BoardPage({
     }
 
     const activeDndId = event.active.id
-    const finalTaskLists = hasDraggedOver.current
-      ? latestDraftTaskLists.current
-      : moveCardInTaskLists(taskLists, activeDndId, event.over?.id)
+
+    if (event.over.id === 'delete-card') {
+      const cardId = parseCardId(activeDndId)
+      const nextTaskLists = withoutCard(latestDraftTaskLists.current ?? taskLists, cardId)
+
+      setDeletingCard(true)
+      setDraftTaskLists(nextTaskLists)
+      latestDraftTaskLists.current = nextTaskLists
+
+      await wait(DELETE_ANIMATION_DURATION)
+
+      setActiveCard(null)
+      lastOverId.current = null
+      hasDraggedOver.current = false
+
+      await onDeleteCard(cardId)
+
+      setDeletingCard(false)
+      setDraftTaskLists(null)
+      latestDraftTaskLists.current = null
+      return
+    }
+
+    const insertAfterOverCard = shouldInsertAfterOverCard(event)
+    const currentTaskLists = hasDraggedOver.current
+      ? latestDraftTaskLists.current ?? taskLists
+      : taskLists
+    const finalTaskLists = event.over.id === activeDndId
+      ? currentTaskLists
+      : moveCardInTaskLists(currentTaskLists, activeDndId, event.over.id, insertAfterOverCard)
     const finalLocation = findCardLocation(finalTaskLists ?? taskLists, parseCardId(activeDndId))
     const originalLocation = findCardLocation(taskLists, parseCardId(activeDndId))
     const shouldMove = finalLocation
@@ -184,23 +262,24 @@ function BoardPage({
       )
 
     setActiveCard(null)
+    setDeletingCard(false)
     setDraftTaskLists(null)
     latestDraftTaskLists.current = null
     lastOverId.current = null
     hasDraggedOver.current = false
 
     if (shouldMove) {
-      await onMoveCard(
-        finalLocation.card,
-        finalLocation.taskList.id,
-        finalLocation.cardIndex + 1,
-        finalTaskLists,
-      )
+      const affectedTaskListIds = [
+        ...new Set([originalLocation.taskList.id, finalLocation.taskList.id]),
+      ]
+
+      await onUpdateCardOrder(finalTaskLists, affectedTaskListIds)
     }
   }
 
   function handleDragCancel() {
     setActiveCard(null)
+    setDeletingCard(false)
     setDraftTaskLists(null)
     latestDraftTaskLists.current = null
     lastOverId.current = null
@@ -228,14 +307,24 @@ function BoardPage({
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}
       >
+        <CardDeleteDropZone active={Boolean(activeCard)} />
         <section className="board" aria-label="Kanban board">
           {renderedTaskLists.map((taskList) => (
-            <BoardColumn taskList={taskList} onAddCard={onAddCard} key={taskList.id} />
+            <BoardColumn
+              taskList={taskList}
+              onAddCard={onAddCard}
+              onEditCard={onEditCard}
+              key={taskList.id}
+            />
           ))}
         </section>
-        <DragOverlay>
+        <DragOverlay dropAnimation={deletingCard ? null : undefined}>
           {activeCard ? (
-            <BoardCard card={activeCard} className="card-overlay" style={{ cursor: 'grabbing' }} />
+            <BoardCard
+              card={activeCard}
+              className={`card-overlay ${deletingCard ? 'deleting-card-overlay' : ''}`}
+              style={{ cursor: 'grabbing' }}
+            />
           ) : null}
         </DragOverlay>
       </DndContext>
