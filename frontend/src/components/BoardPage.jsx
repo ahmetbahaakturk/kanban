@@ -295,6 +295,7 @@ function BoardPage({
           </button>
           <h1>{board.publicId}</h1>
         </div>
+        <p className="board-help">Double-click a card to edit it.</p>
       </header>
 
       {message ? <p className="board-message">{message}</p> : null}

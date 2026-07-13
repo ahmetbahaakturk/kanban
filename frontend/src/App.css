@@ -249,12 +249,25 @@
 }
 
 .board-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 54px;
 }
 
 .board-header h1 {
   margin-top: 10px;
   font-size: clamp(40px, 5vw, 72px);
+}
+
+.board-help {
+  max-width: 220px;
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: right;
 }
 
 .board-message {
@@ -597,7 +610,14 @@
   }
 
   .board-header {
+    display: block;
     margin-bottom: 28px;
+  }
+
+  .board-help {
+    max-width: none;
+    margin-top: 12px;
+    text-align: left;
   }
 
   .board {
