@@ -131,6 +131,10 @@ Vite geliştirme sunucusu `/api` isteklerini `http://localhost:8080` adresindeki
 
 Frontend Docker ile çalışırken bu istekler `/api` prefix'i üzerinden Nginx tarafından backende iletilir.
 
+## Postman Collection
+
+[Kanban Postman Collection](postman/Kanban.postman_collection.json) dosyasını Postman'e import edebilirsiniz. `baseUrl`, `publicId`, `taskListId` ve `cardId` collection variable'larini isteklere gore guncellemeniz yeterlidir.
+
 ## Proje Yapısı
 
 ```text

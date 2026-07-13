@@ -1,0 +1,153 @@
+{
+  "info": {
+    "_postman_id": "d94d290f-0d5e-43e4-94ae-b6bd6fe1e6d0",
+    "name": "Kanban API",
+    "description": "Kanban backend endpointleri. Once bir board olusturup detay isteginden taskListId ve cardId degerlerini collection variable'larina yazin.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "publicId",
+      "value": "my-board"
+    },
+    {
+      "key": "taskListId",
+      "value": "1"
+    },
+    {
+      "key": "cardId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Boards",
+      "item": [
+        {
+          "name": "Create board",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicId\": \"{{publicId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/boards"
+          }
+        },
+        {
+          "name": "Check board availability",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/boards?publicId={{publicId}}"
+          }
+        },
+        {
+          "name": "Get board detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/boards/{{publicId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cards",
+      "item": [
+        {
+          "name": "Create card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskListId\": {{taskListId}},\n  \"title\": \"Plan the API\",\n  \"text\": \"Create the first draft of the API contract.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/cards"
+          }
+        },
+        {
+          "name": "Update card",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Plan the API\",\n  \"text\": \"Contract is ready for review.\",\n  \"colorCode\": \"#327edc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/cards/{{cardId}}"
+          }
+        },
+        {
+          "name": "Delete card",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/cards/{{cardId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Task lists",
+      "item": [
+        {
+          "name": "Update card order",
+          "request": {
+            "method": "PUT",
+            "description": "cardIds alanina secilen task list icin kartlarin son siralamasi eksiksiz yazilmalidir.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskLists\": [\n    {\n      \"taskListId\": {{taskListId}},\n      \"cardIds\": [{{cardId}}]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/task-lists/order"
+          }
+        }
+      ]
+    }
+  ]
+}
