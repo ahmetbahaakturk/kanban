@@ -1,29 +1,48 @@
 # Kanban
 
-Kanban, paylaşılabilir bir `publicId` ile board oluşturmayı ve mevcut boardları açmayı sağlayan basit bir görev yönetimi uygulamasıdır. Kartlar listeler arasında sürüklenebilir, aynı liste içinde sıralanabilir, düzenlenebilir ve silinebilir.
+Paylaşılabilir board isimleriyle çalışan, sade ve hızlı bir Kanban uygulaması.
+
+Bu projede kullanıcı bir board adı belirleyerek yeni board oluşturabilir veya daha önce oluşturulmuş bir boardu aynı adla açabilir. Board içindeki kartlar listeler arasında sürüklenebilir, aynı liste içinde sıralanabilir, düzenlenebilir ve silinebilir.
+
+## Özellikler
+
+- Public board adıyla board oluşturma ve açma
+- Varsayılan Kanban listeleri: Backlog, To Do, In Progress, Done
+- Kart oluşturma, düzenleme ve silme
+- Kartları liste içinde ve listeler arasında sürükle-bırak ile sıralama
+- Son gezilen boardları tarayıcı local storage üzerinde saklama
+- Flyway ile otomatik veritabanı şeması kurulumu
+- Docker Compose ile frontend, backend ve PostgreSQL'i tek komutla çalıştırma
+- Ortam değişkenleri yoksa backend tarafında H2 ile hızlı lokal geliştirme
 
 ## Teknolojiler
 
-- Backend: Java 25, Spring Boot, Spring Data JPA ve Flyway
-- Frontend: React, Vite ve dnd-kit
-- Veritabanı: PostgreSQL; ortam değişkenleri verilmezse yerel geliştirmede H2
-- Konteyner: Docker Compose, Nginx
+| Katman | Teknolojiler |
+| --- | --- |
+| Backend | Java 25, Spring Boot, Spring Data JPA, Flyway |
+| Frontend | React, Vite, dnd-kit |
+| Veritabanı | PostgreSQL, H2 |
+| Çalıştırma | Docker Compose, Nginx |
 
-## Tek komutla çalıştırma
+## Hızlı Başlangıç
 
-Bilgisayarda Docker Desktop'ın çalışıyor olması yeterlidir. Varsayılan `5173`, `8080` ve `5432` portlarının kullanılabilir olduğundan emin olduktan sonra proje dizininde şu komutu çalıştırın:
+Docker Desktop çalışıyorsa proje kök dizininde tek komut yeterli:
 
 ```bash
 docker compose up --build
 ```
 
-Bu komut PostgreSQL, backend ve frontend servislerini sırasıyla hazırlar ve çalıştırır.
+Servisler ayağa kalktıktan sonra:
 
 - Uygulama: http://localhost:5173
 - Backend API: http://localhost:8080
 - PostgreSQL: `localhost:5432`
 
-Servisleri arka planda çalıştırmak için:
+Hazır örnek board için uygulamada `mock` boardunu açabilirsiniz.
+
+## Docker Komutları
+
+Arka planda çalıştırmak için:
 
 ```bash
 docker compose up --build -d
@@ -41,28 +60,28 @@ Servisleri durdurmak için:
 docker compose down
 ```
 
-PostgreSQL verileri `postgres_data` adlı Docker volume'unda saklanır. Servisleri durdurmak verileri silmez. Veritabanını da tamamen sıfırlamak için aşağıdaki komut kullanılabilir:
+Veritabanı verileri `postgres_data` Docker volume içinde saklanır. Veritabanını tamamen sıfırlamak için:
 
 ```bash
 docker compose down -v
 ```
 
-> Bu komut PostgreSQL içindeki tüm proje verilerini kalıcı olarak siler.
+Bu komut PostgreSQL içindeki proje verilerini kalıcı olarak siler.
 
-## Ayarlar
+## Ortam Değişkenleri
 
 Compose varsayılan olarak aşağıdaki değerleri kullanır:
 
-| Değişken | Varsayılan değer | Açıklama |
+| Değişken | Varsayılan | Açıklama |
 | --- | --- | --- |
-| `POSTGRES_DB` | `kanban` | Veritabanı adı |
-| `POSTGRES_USER` | `kanban` | Veritabanı kullanıcısı |
-| `POSTGRES_PASSWORD` | `kanban` | Veritabanı parolası |
+| `POSTGRES_DB` | `kanban` | PostgreSQL veritabanı adı |
+| `POSTGRES_USER` | `kanban` | PostgreSQL kullanıcı adı |
+| `POSTGRES_PASSWORD` | `kanban` | PostgreSQL parolası |
 | `POSTGRES_PORT` | `5432` | Bilgisayardan erişilen PostgreSQL portu |
 | `BACKEND_PORT` | `8080` | Backend portu |
-| `FRONTEND_PORT` | `5173` | Uygulamanın tarayıcı portu |
+| `FRONTEND_PORT` | `5173` | Frontend portu |
 
-Bu değerler proje kökünde oluşturulacak bir `.env` dosyasıyla değiştirilebilir:
+Bu değerleri değiştirmek için proje kökünde `.env` dosyası oluşturabilirsiniz:
 
 ```dotenv
 POSTGRES_DB=kanban
@@ -73,17 +92,19 @@ BACKEND_PORT=8080
 FRONTEND_PORT=5173
 ```
 
-Varsayılan portlardan biri başka bir uygulama tarafından kullanılıyorsa yalnızca ilgili port değerini `.env` içinde değiştirmek yeterlidir.
+Örneğin `5173` portu doluysa sadece `FRONTEND_PORT` değerini değiştirmeniz yeterlidir.
 
-## Docker olmadan yerel geliştirme
+## Docker Olmadan Çalıştırma
 
-Backend için herhangi bir veritabanı ortam değişkeni verilmezse uygulama otomatik olarak bellek içi H2 veritabanını kullanır:
+Backend, veritabanı ortam değişkenleri verilmezse otomatik olarak H2 kullanır.
+
+Backend:
 
 ```powershell
 .\mvnw spring-boot:run
 ```
 
-Frontend ayrı bir terminalde çalıştırılabilir:
+Frontend:
 
 ```powershell
 cd frontend
@@ -93,7 +114,20 @@ npm run dev
 
 Vite geliştirme sunucusu `/api` isteklerini `http://localhost:8080` adresindeki backende yönlendirir.
 
-## Test ve kontroller
+## Faydalı Endpointler
+
+| Metot | Endpoint | Açıklama |
+| --- | --- | --- |
+| `POST` | `/boards` | Yeni board oluşturur |
+| `GET` | `/boards/{publicId}` | Boardu listeleri ve kartlarıyla getirir |
+| `POST` | `/cards` | Bir task list içine kart oluşturur |
+| `PUT` | `/cards/{cardId}` | Kart başlık, metin ve rengini günceller |
+| `DELETE` | `/cards/{cardId}` | Kartı siler |
+| `PUT` | `/task-lists/order` | Task listler içindeki kart sırasını günceller |
+
+Frontend Docker ile çalışırken bu istekler `/api` prefix'i üzerinden Nginx tarafından backende iletilir.
+
+## Test ve Kontroller
 
 Backend testleri:
 
@@ -109,4 +143,25 @@ npm run lint
 npm run build
 ```
 
-Flyway, backend her başladığında gerekli veritabanı şemasını otomatik olarak oluşturur veya günceller.
+## Proje Yapısı
+
+```text
+.
+├── compose.yaml
+├── Dockerfile
+├── frontend
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── src
+└── src
+    ├── main
+    │   ├── java/com/kanban
+    │   └── resources/db/migration
+    └── test
+```
+
+## Notlar
+
+- Veritabanı şeması Flyway migrationları ile kurulur.
+- Docker Compose akışında kalıcı veritabanı PostgreSQL'tir.
+- Lokal backend geliştirme sırasında env verilmezse H2 kullanıldığı için uygulamayı yeniden başlatınca veriler sıfırlanabilir.
