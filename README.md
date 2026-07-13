@@ -12,7 +12,6 @@ Bu projede kullanıcı bir board adı belirleyerek yeni board oluşturabilir vey
 - Kartları liste içinde ve listeler arasında sürükle-bırak ile sıralama
 - Son gezilen boardları tarayıcı local storage üzerinde saklama
 - Flyway ile otomatik veritabanı şeması kurulumu
-- Hazır Docker image'larıyla kodu indirmeden çalıştırma
 - Docker Compose ile frontend, backend ve PostgreSQL'i tek komutla çalıştırma
 - Ortam değişkenleri yoksa backend tarafında H2 ile hızlı lokal geliştirme
 
@@ -23,38 +22,7 @@ Bu projede kullanıcı bir board adı belirleyerek yeni board oluşturabilir vey
 | Backend | Java 25, Spring Boot, Spring Data JPA, Flyway |
 | Frontend | React, Vite, dnd-kit |
 | Veritabanı | PostgreSQL, H2 |
-| Çalıştırma | Docker Compose, Nginx, GitHub Container Registry |
-
-## Kodu İndirmeden Çalıştırma
-
-Bu yöntem sadece hazır Docker image'larını indirir. Bilgisayarda Java, Node.js, Maven veya PostgreSQL kurulu olması gerekmez. Docker Desktop yeterlidir.
-
-Windows PowerShell:
-
-```powershell
-Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/ahmetbahaakturk/kanban/main/compose.images.yaml `
-  -OutFile compose.yaml
-
-docker compose up
-```
-
-macOS veya Linux:
-
-```bash
-curl -L -o compose.yaml https://raw.githubusercontent.com/ahmetbahaakturk/kanban/main/compose.images.yaml
-docker compose up
-```
-
-Servisler ayağa kalktıktan sonra:
-
-- Uygulama: http://localhost:5173
-- Backend API: http://localhost:8080
-- PostgreSQL: `localhost:5432`
-
-Hazır örnek board için uygulamada `mock` boardunu açabilirsiniz.
-
-> İlk image publish işleminden sonra GitHub Container Registry paketlerinin public görünür olduğundan emin olunmalıdır. Public hale geldikten sonra kullanıcılar login olmadan image çekebilir.
+| Çalıştırma | Docker Compose, Nginx |
 
 ## Kodu İndirerek Çalıştırma
 
@@ -67,6 +35,14 @@ docker compose up --build
 ```
 
 Bu komut proje kodunu indirir, PostgreSQL container'ını başlatır, backend ve frontend image'larını lokal Dockerfile'lardan build edip çalıştırır.
+
+Servisler ayağa kalktıktan sonra:
+
+- Uygulama: http://localhost:5173
+- Backend API: http://localhost:8080
+- PostgreSQL: `localhost:5432`
+
+Hazır örnek board için uygulamada `mock` boardunu açabilirsiniz.
 
 ## Docker Komutları
 
@@ -171,22 +147,11 @@ npm run lint
 npm run build
 ```
 
-## Image Yayınlama
-
-`main` branch'ine push yapıldığında GitHub Actions iki image yayınlar:
-
-- `ghcr.io/ahmetbahaakturk/kanban-backend:latest`
-- `ghcr.io/ahmetbahaakturk/kanban-frontend:latest`
-
-Bu image'lar `compose.images.yaml` tarafından kullanılır.
-
 ## Proje Yapısı
 
 ```text
 .
-|-- .github/workflows/publish-images.yml
 |-- compose.yaml
-|-- compose.images.yaml
 |-- Dockerfile
 |-- frontend
 |   |-- Dockerfile
