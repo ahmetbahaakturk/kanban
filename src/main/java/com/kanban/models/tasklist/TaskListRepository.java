@@ -7,5 +7,7 @@ import java.util.List;
 
 @Repository
 public interface TaskListRepository extends JpaRepository<TaskList, Long> {
+
+    //Entity üzerinden değil direkt olarak Board foreign key üzerinden taskListleri getirebiliyoruz
     List<TaskList> findAllByBoard_PublicIdOrderByIdAsc(String publicId);
 }

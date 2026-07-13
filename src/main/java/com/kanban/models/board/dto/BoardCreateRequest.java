@@ -9,6 +9,7 @@ public record BoardCreateRequest(
         PublicId publicId
 ) {
     public BoardCreateRequest(String publicId) {
+        //Buradaki String publicId değerini Wrapper PublicId'ye dönüştürüp öyle dto oluşturulur
         this(new PublicId(publicId));
     }
 

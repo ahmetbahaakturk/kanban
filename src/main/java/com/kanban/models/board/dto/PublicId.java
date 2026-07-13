@@ -6,7 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-// Centralizes publicId validation for requests that carry a publicId.
+// PublicId yapısını merkezi bir kontrol sınıfı altında birleştirerek
+// Dtolarda veri bütünlügünü sagliyoruz
 public record PublicId(
         @NotBlank(message = "publicId is required")
         @Size(

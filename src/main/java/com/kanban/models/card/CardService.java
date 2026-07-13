@@ -21,14 +21,14 @@ public class CardService {
     @Transactional
     public CardResponse createCard(CardCreateRequest request) {
 
-        // Check that the task list exists before creating the card.
+        // İçine card eklenmesi istenilen TaskListin varlığını kontrol ediyoruz.
         TaskList taskList = taskListRepository.findById(request.taskListId())
                 .orElseThrow(() ->
                         new NotFoundException("Task list not found with id: " + request.taskListId())
                 );
 
 
-        // Place the new card after the current last card in the task list.
+        // En büyük sıra numaraları kartın bir sırasını numara olarak belirliyoruz.
         Integer position = cardRepository.findMaxPositionByTaskListId(request.taskListId())
                 .map(maxPosition -> maxPosition + 1)
                 .orElse(1);

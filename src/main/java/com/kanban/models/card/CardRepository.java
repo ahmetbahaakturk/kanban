@@ -13,9 +13,12 @@ import java.util.Optional;
 public interface CardRepository extends JpaRepository<Card, Long> {
     List<Card> findAllByTaskListInOrderByPositionAsc(List<TaskList> taskLists);
 
+
+    //O an taskliste bağlı cardların en büyük position değelerini çekiyoruz.
     @Query("select max(card.position) from Card card where card.taskList.id = :taskListId")
     Optional<Integer> findMaxPositionByTaskListId(Long taskListId);
 
+    //Silinen karttan sonraki kartların sıra numaralarını 1 düşürürek sıralama uyumlu hale gelir
     @Modifying
     @Query("""
             update Card card

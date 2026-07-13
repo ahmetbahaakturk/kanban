@@ -7,6 +7,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 public class CardColorProvider {
+
+    //Cardlar oluşturulduğunda üretilecek hex formatında rastgele renk değerleri
     private static final List<String> DEFAULT_COLOR_CODES = List.of(
             "#c742a7",
             "#df3035",
