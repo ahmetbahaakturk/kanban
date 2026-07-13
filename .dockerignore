@@ -1,0 +1,8 @@
+.git
+.idea
+.vscode
+frontend
+mockups
+target
+*.log
+*.err
