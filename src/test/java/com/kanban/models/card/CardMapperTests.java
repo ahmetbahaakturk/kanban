@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.kanban.models.card.dto.CardCreateRequest;
 import com.kanban.models.card.dto.CardResponse;
+import com.kanban.models.card.dto.CardUpdateRequest;
 import com.kanban.models.tasklist.TaskList;
 import com.kanban.models.tasklist.TaskListType;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,32 @@ class CardMapperTests {
         assertThat(card.getTaskList()).isSameAs(taskList);
         assertThat(card.getColorCode()).isEqualTo("#327edc");
         assertThat(card.getPosition()).isEqualTo(3);
+    }
+
+    @Test
+    void updateCardMapsUpdateRequestToExistingCard() {
+        Card card = new Card();
+        card.setTitle("Old title");
+        card.setText("Old text");
+        card.setColorCode("#327edc");
+        CardUpdateRequest request = new CardUpdateRequest("Updated title", "Updated text", "#0cae96");
+
+        mapper.updateCard(card, request);
+
+        assertThat(card.getTitle()).isEqualTo("Updated title");
+        assertThat(card.getText()).isEqualTo("Updated text");
+        assertThat(card.getColorCode()).isEqualTo("#0cae96");
+    }
+
+    @Test
+    void updateCardKeepsCurrentColorWhenColorCodeIsNull() {
+        Card card = new Card();
+        card.setColorCode("#327edc");
+        CardUpdateRequest request = new CardUpdateRequest("Updated title", null, null);
+
+        mapper.updateCard(card, request);
+
+        assertThat(card.getColorCode()).isEqualTo("#327edc");
     }
 
     @Test

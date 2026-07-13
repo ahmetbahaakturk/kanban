@@ -6,8 +6,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kanban.models.card.dto.CardCreateRequest;
-import com.kanban.models.card.dto.CardMoveRequest;
 import com.kanban.models.card.dto.CardResponse;
+import com.kanban.models.card.dto.CardUpdateRequest;
 import org.junit.jupiter.api.Test;
 
 class CardControllerTests {
@@ -28,15 +28,22 @@ class CardControllerTests {
     }
 
     @Test
-    void moveCardDelegatesToService() {
-        CardMoveRequest request = new CardMoveRequest(2L, 1);
-        CardResponse response = new CardResponse(10L, "Card title", "Card text", "#327edc", 1);
+    void updateCardDelegatesToService() {
+        CardUpdateRequest request = new CardUpdateRequest("Updated title", "Updated text", "#0cae96");
+        CardResponse response = new CardResponse(10L, "Updated title", "Updated text", "#0cae96", 1);
 
-        when(cardService.moveCard(10L, request)).thenReturn(response);
+        when(cardService.updateCard(10L, request)).thenReturn(response);
 
-        CardResponse result = controller.moveCard(10L, request);
+        CardResponse result = controller.updateCard(10L, request);
 
         assertThat(result).isEqualTo(response);
-        verify(cardService).moveCard(10L, request);
+        verify(cardService).updateCard(10L, request);
+    }
+
+    @Test
+    void deleteCardDelegatesToService() {
+        controller.deleteCard(10L);
+
+        verify(cardService).deleteCard(10L);
     }
 }

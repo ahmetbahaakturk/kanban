@@ -2,6 +2,7 @@ package com.kanban.models.card;
 
 import com.kanban.models.card.dto.CardResponse;
 import com.kanban.models.card.dto.CardCreateRequest;
+import com.kanban.models.card.dto.CardUpdateRequest;
 import com.kanban.models.tasklist.TaskList;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,15 @@ public class CardMapper {
         card.setPosition(position);
 
         return card;
+    }
+
+    public void updateCard(Card card, CardUpdateRequest request) {
+        card.setTitle(request.title());
+        card.setText(request.text());
+
+        if (request.colorCode() != null) {
+            card.setColorCode(request.colorCode());
+        }
     }
 
     public CardResponse toCardResponse(Card card) {

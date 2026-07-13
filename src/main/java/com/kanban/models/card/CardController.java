@@ -1,14 +1,15 @@
 package com.kanban.models.card;
 
 import com.kanban.models.card.dto.CardCreateRequest;
-import com.kanban.models.card.dto.CardMoveRequest;
 import com.kanban.models.card.dto.CardResponse;
+import com.kanban.models.card.dto.CardUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -26,11 +27,17 @@ public class CardController {
         return cardService.createCard(request);
     }
 
-    @PatchMapping("/{cardId}/move")
-    public CardResponse moveCard(
+    @PutMapping("/{cardId}")
+    public CardResponse updateCard(
             @PathVariable Long cardId,
-            @Valid @RequestBody CardMoveRequest request
+            @Valid @RequestBody CardUpdateRequest request
     ) {
-        return cardService.moveCard(cardId, request);
+        return cardService.updateCard(cardId, request);
+    }
+
+    @DeleteMapping("/{cardId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCard(@PathVariable Long cardId) {
+        cardService.deleteCard(cardId);
     }
 }
