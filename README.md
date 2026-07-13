@@ -131,22 +131,6 @@ Vite geliştirme sunucusu `/api` isteklerini `http://localhost:8080` adresindeki
 
 Frontend Docker ile çalışırken bu istekler `/api` prefix'i üzerinden Nginx tarafından backende iletilir.
 
-## Test ve Kontroller
-
-Backend testleri:
-
-```powershell
-.\mvnw test
-```
-
-Frontend kontrolleri:
-
-```powershell
-cd frontend
-npm run lint
-npm run build
-```
-
 ## Proje Yapısı
 
 ```text
@@ -161,7 +145,6 @@ npm run build
     |-- main
     |   |-- java/com/kanban
     |   `-- resources/db/migration
-    `-- test
 ```
 
 ## Notlar
