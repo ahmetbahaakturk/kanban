@@ -36,6 +36,7 @@ public class BoardService {
     public BoardResponse createBoard(BoardCreateRequest request) {
         String publicId = request.publicIdValue();
 
+        //Boardun çakışma durumunu kontrol ediyoruz
         if (repository.existsById(publicId)) {
             throw new AlreadyExistsException("Board already exists with publicId: " + publicId);
         }
@@ -43,6 +44,8 @@ public class BoardService {
         Board boardToSave = boardMapper.toBoard(request);
         Board savedBoard;
 
+
+        //Aynı anda create edilme riskine karşın database seviyesinde 2. çakışma kontrolünü gerçekleştiriyoruz.
         try {
             savedBoard = repository.save(boardToSave);
         } catch (DataIntegrityViolationException exception) {
@@ -62,14 +65,29 @@ public class BoardService {
     @Transactional(readOnly = true)
     public BoardDetailResponse getBoardDetail(PublicId requestedPublicId) {
         String publicId = requestedPublicId.value();
-        Board board = repository.findById(publicId)
-                .orElseThrow(() -> new NotFoundException("Board not found with publicId: " + publicId));
+
+        Board board = repository.findById(publicId).orElseThrow(() ->
+                new NotFoundException("Board not found with publicId: " + publicId)
+        );
+
         List<TaskList> taskLists = taskListRepository.findAllByBoard_PublicIdOrderByIdAsc(publicId);
-        List<Card> cards = taskLists.isEmpty()
-                ? List.of()
-                : cardRepository.findAllByTaskListInOrderByPositionAsc(taskLists);
+
+        //Eğer boarda bağlı bir taskList yok ise o boardu sistemden siliyoruz ve frontende hata yolluyoruz.
+        if (taskLists.isEmpty()) {
+            repository.delete(board);
+            throw new IllegalStateException("Board has no task lists: " + publicId);
+        }
+
+        List<Card> cards = cardRepository.findAllByTaskListInOrderByPositionAsc(taskLists);
+
+        //İlk önce her card listesini kendi içinde idsine göre sıralayıp sonra onları TastListlere
+        //göre map ediyoruz. Böylece arayüze sıralı gelmiş bir yapıya ön ayak oluyor.
         Map<Long, List<Card>> cardsByTaskListId = cards.stream()
-                .collect(Collectors.groupingBy(card -> card.getTaskList().getId()));
+                .collect(Collectors.groupingBy(
+                        card -> card.getTaskList().getId())
+                );
+
+        //TaskList alt dtosunu hazırlıyoruz.
         List<TaskListResponse> taskListResponses = taskLists.stream()
                 .map(taskList -> taskListMapper.toTaskListResponse(
                         taskList,

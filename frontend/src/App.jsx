@@ -70,6 +70,14 @@ function validateBoardName(publicId) {
   return ''
 }
 
+function getBoardLoadErrorMessage(message) {
+  if (message?.startsWith('Board has no task lists:')) {
+    return 'This board could not be opened because its lists are missing. Please create a new board or try another board name.'
+  }
+
+  return message
+}
+
 async function parseResponse(response) {
   const text = await response.text()
 
@@ -140,7 +148,7 @@ function App() {
       const data = await parseResponse(response)
 
       if (!response.ok) {
-        throw new Error(data?.message ?? 'Board could not be found.')
+        throw new Error(getBoardLoadErrorMessage(data?.message) ?? 'Board could not be found.')
       }
 
       setBoard(data)
