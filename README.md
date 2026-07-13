@@ -12,6 +12,7 @@ Bu projede kullanıcı bir board adı belirleyerek yeni board oluşturabilir vey
 - Kartları liste içinde ve listeler arasında sürükle-bırak ile sıralama
 - Son gezilen boardları tarayıcı local storage üzerinde saklama
 - Flyway ile otomatik veritabanı şeması kurulumu
+- Hazır Docker image'larıyla kodu indirmeden çalıştırma
 - Docker Compose ile frontend, backend ve PostgreSQL'i tek komutla çalıştırma
 - Ortam değişkenleri yoksa backend tarafında H2 ile hızlı lokal geliştirme
 
@@ -22,14 +23,27 @@ Bu projede kullanıcı bir board adı belirleyerek yeni board oluşturabilir vey
 | Backend | Java 25, Spring Boot, Spring Data JPA, Flyway |
 | Frontend | React, Vite, dnd-kit |
 | Veritabanı | PostgreSQL, H2 |
-| Çalıştırma | Docker Compose, Nginx |
+| Çalıştırma | Docker Compose, Nginx, GitHub Container Registry |
 
-## Hızlı Başlangıç
+## Kodu İndirmeden Çalıştırma
 
-Docker Desktop çalışıyorsa proje kök dizininde tek komut yeterli:
+Bu yöntem sadece hazır Docker image'larını indirir. Bilgisayarda Java, Node.js, Maven veya PostgreSQL kurulu olması gerekmez. Docker Desktop yeterlidir.
+
+Windows PowerShell:
+
+```powershell
+Invoke-WebRequest `
+  -Uri https://raw.githubusercontent.com/ahmetbahaakturk/kanban/main/compose.images.yaml `
+  -OutFile compose.yaml
+
+docker compose up
+```
+
+macOS veya Linux:
 
 ```bash
-docker compose up --build
+curl -L -o compose.yaml https://raw.githubusercontent.com/ahmetbahaakturk/kanban/main/compose.images.yaml
+docker compose up
 ```
 
 Servisler ayağa kalktıktan sonra:
@@ -40,12 +54,26 @@ Servisler ayağa kalktıktan sonra:
 
 Hazır örnek board için uygulamada `mock` boardunu açabilirsiniz.
 
+> İlk image publish işleminden sonra GitHub Container Registry paketlerinin public görünür olduğundan emin olunmalıdır. Public hale geldikten sonra kullanıcılar login olmadan image çekebilir.
+
+## Kodu İndirerek Çalıştırma
+
+Projeyi klonlayıp lokal Docker build almak isterseniz:
+
+```bash
+git clone https://github.com/ahmetbahaakturk/kanban.git
+cd kanban
+docker compose up --build
+```
+
+Bu komut PostgreSQL, backend ve frontend servislerini lokal Dockerfile'lardan build edip çalıştırır.
+
 ## Docker Komutları
 
 Arka planda çalıştırmak için:
 
 ```bash
-docker compose up --build -d
+docker compose up -d
 ```
 
 Logları takip etmek için:
@@ -81,7 +109,7 @@ Compose varsayılan olarak aşağıdaki değerleri kullanır:
 | `BACKEND_PORT` | `8080` | Backend portu |
 | `FRONTEND_PORT` | `5173` | Frontend portu |
 
-Bu değerleri değiştirmek için proje kökünde `.env` dosyası oluşturabilirsiniz:
+Bu değerleri değiştirmek için compose dosyasının yanında `.env` dosyası oluşturabilirsiniz:
 
 ```dotenv
 POSTGRES_DB=kanban
@@ -96,7 +124,7 @@ FRONTEND_PORT=5173
 
 ## Docker Olmadan Çalıştırma
 
-Backend, veritabanı ortam değişkenleri verilmezse otomatik olarak H2 kullanır.
+Backend, veritabanı ortam değişkenleri verilmezse otomatik olarak H2 kullanır. Bu yöntem için bilgisayarda Java 25 gerekir.
 
 Backend:
 
@@ -104,7 +132,7 @@ Backend:
 .\mvnw spring-boot:run
 ```
 
-Frontend:
+Frontend için Node.js gerekir:
 
 ```powershell
 cd frontend
@@ -143,21 +171,32 @@ npm run lint
 npm run build
 ```
 
+## Image Yayınlama
+
+`main` branch'ine push yapıldığında GitHub Actions iki image yayınlar:
+
+- `ghcr.io/ahmetbahaakturk/kanban-backend:latest`
+- `ghcr.io/ahmetbahaakturk/kanban-frontend:latest`
+
+Bu image'lar `compose.images.yaml` tarafından kullanılır.
+
 ## Proje Yapısı
 
 ```text
 .
-├── compose.yaml
-├── Dockerfile
-├── frontend
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── src
-└── src
-    ├── main
-    │   ├── java/com/kanban
-    │   └── resources/db/migration
-    └── test
+|-- .github/workflows/publish-images.yml
+|-- compose.yaml
+|-- compose.images.yaml
+|-- Dockerfile
+|-- frontend
+|   |-- Dockerfile
+|   |-- nginx.conf
+|   `-- src
+`-- src
+    |-- main
+    |   |-- java/com/kanban
+    |   `-- resources/db/migration
+    `-- test
 ```
 
 ## Notlar
