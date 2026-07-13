@@ -20,9 +20,7 @@ public record PublicId(
         )
         String value
 ) {
-
-
-    //Eğer bir publicId değeri başka bir dtonun içine gömülü ise buraya çevrilmesi için giriliyor.
+    // Lets Jackson build this request value object from a plain JSON string.
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public PublicId {
     }

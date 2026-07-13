@@ -17,6 +17,13 @@ class PublicIdTests {
     }
 
     @Test
+    void acceptsMinimumLengthPublicId() {
+        PublicId publicId = new PublicId("mock");
+
+        assertThat(validator.validate(publicId)).isEmpty();
+    }
+
+    @Test
     void rejectsNonUrlSafePublicId() {
         PublicId publicId = new PublicId("board 1");
 
@@ -27,7 +34,7 @@ class PublicIdTests {
 
     @Test
     void rejectsPublicIdShorterThanMinimumLength() {
-        PublicId publicId = new PublicId("abcd");
+        PublicId publicId = new PublicId("abc");
 
         assertThat(validator.validate(publicId)).isNotEmpty();
     }
