@@ -19,6 +19,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+
+///Bu sınıf tamamen mock veri üretir uygulama başlarken. mock idli tablo için mock cardlar üretir.
 @Component
 @RequiredArgsConstructor
 public class MockBoardSeeder implements ApplicationRunner {

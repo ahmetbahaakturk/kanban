@@ -58,7 +58,7 @@ Hazır örnek board için uygulamada `mock` boardunu açabilirsiniz.
 
 ## Kodu İndirerek Çalıştırma
 
-Projeyi klonlayıp lokal Docker build almak isterseniz:
+Projeyi kendi bilgisayarınıza Git ile indirip çalıştırmak isterseniz bilgisayarda Git ve Docker Desktop kurulu olması yeterlidir. Java, Node.js veya PostgreSQL'i ayrıca kurmanız gerekmez.
 
 ```bash
 git clone https://github.com/ahmetbahaakturk/kanban.git
@@ -66,7 +66,7 @@ cd kanban
 docker compose up --build
 ```
 
-Bu komut PostgreSQL, backend ve frontend servislerini lokal Dockerfile'lardan build edip çalıştırır.
+Bu komut proje kodunu indirir, PostgreSQL container'ını başlatır, backend ve frontend image'larını lokal Dockerfile'lardan build edip çalıştırır.
 
 ## Docker Komutları
 
