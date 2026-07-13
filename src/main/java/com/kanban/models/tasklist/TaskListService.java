@@ -24,6 +24,8 @@ public class TaskListService {
     private final TaskListRepository repository;
     private final CardRepository cardRepository;
 
+
+    //Board ilk create edilirken varsayılan TastListlerini oluşturan fonksiyon
     public void createTaskLists(Board board) {
         List<TaskList> taskListsToSave = new ArrayList<>();
 
@@ -41,14 +43,35 @@ public class TaskListService {
 
     @Transactional
     public void updateCardOrder(TaskListsOrderRequest request) {
+
+        //İçinde Değişim yapılacak tasklistlerin idsini getirir.
         List<TaskListOrderRequest> requestedTaskLists = request.taskLists();
+
+        //TaskListleri veritabanından çeker
+        List<TaskList> taskLists = findTaskLists(requestedTaskLists);
+
+        //Her tasklist için etkilenecek tüm kartları veritabanından çeker.
+        List<Card> affectedCards = cardRepository.findAllByTaskListInOrderByPositionAsc(taskLists);
+
+
+        //Döngü içinde sürekli arama yapmamak için id üzerinden hızlı erişilecek map yapıları kuruyoruz.
+        Map<Long, TaskList> taskListsById = mapTaskListsById(taskLists);
+        Map<Long, Card> cardsById = mapCardsById(affectedCards);
+
+        //Frontendden gelen card idlerinin gerçekten bu tasklistlere ait olup olmadığını kontrol ediyoruz.
+        validateRequestedCards(requestedTaskLists, cardsById, affectedCards.size());
+
+        //Frontendden gelen tasklist ve position düzenini doğrudan kartlara uyguluyoruz.
+        applyRequestedOrder(requestedTaskLists, taskListsById, cardsById);
+        cardRepository.saveAll(affectedCards);
+    }
+
+    private List<TaskList> findTaskLists(List<TaskListOrderRequest> requestedTaskLists) {
         List<Long> taskListIds = requestedTaskLists.stream()
                 .map(TaskListOrderRequest::taskListId)
                 .toList();
-
         List<TaskList> taskLists = repository.findAllById(taskListIds);
-        Map<Long, TaskList> taskListsById = taskLists.stream()
-                .collect(Collectors.toMap(TaskList::getId, taskList -> taskList));
+        Map<Long, TaskList> taskListsById = mapTaskListsById(taskLists);
 
         for (Long taskListId : taskListIds) {
             if (!taskListsById.containsKey(taskListId)) {
@@ -56,31 +79,52 @@ public class TaskListService {
             }
         }
 
-        List<Card> affectedCards = cardRepository.findAllByTaskListInOrderByPositionAsc(taskLists);
-        Map<Long, Card> cardsById = affectedCards.stream()
-                .collect(Collectors.toMap(Card::getId, card -> card));
+        return taskLists;
+    }
 
+    private Map<Long, TaskList> mapTaskListsById(List<TaskList> taskLists) {
+        return taskLists.stream()
+                .collect(Collectors.toMap(TaskList::getId, taskList -> taskList));
+    }
+
+    private Map<Long, Card> mapCardsById(List<Card> cards) {
+        return cards.stream()
+                .collect(Collectors.toMap(Card::getId, card -> card));
+    }
+
+    private void validateRequestedCards(
+            List<TaskListOrderRequest> requestedTaskLists,
+            Map<Long, Card> cardsById,
+            int affectedCardCount
+    ) {
+        //Aynı kart iki kez gönderilmiş mi veya eksik kart var mı diye takip ediyoruz.
         Set<Long> orderedCardIds = new HashSet<>();
 
         for (TaskListOrderRequest taskListRequest : requestedTaskLists) {
             for (Long cardId : taskListRequest.cardIds()) {
                 if (!cardsById.containsKey(cardId) || !orderedCardIds.add(cardId)) {
-                    throw new BadRequestException(
-                            "cardIds must contain every card from the requested task lists exactly once"
-                    );
+                    throwInvalidCardOrderException();
                 }
             }
         }
 
-        if (orderedCardIds.size() != affectedCards.size()) {
-            throw new BadRequestException(
-                    "cardIds must contain every card from the requested task lists exactly once"
-            );
+        if (orderedCardIds.size() != affectedCardCount) {
+            throwInvalidCardOrderException();
         }
+    }
 
-        assignTemporaryPositions(affectedCards);
-        cardRepository.saveAllAndFlush(affectedCards);
+    private void throwInvalidCardOrderException() {
+        throw new BadRequestException(
+                "cardIds must contain every card from the requested task lists exactly once"
+        );
+    }
 
+    private void applyRequestedOrder(
+            List<TaskListOrderRequest> requestedTaskLists,
+            Map<Long, TaskList> taskListsById,
+            Map<Long, Card> cardsById
+    ) {
+        //Her tasklist için gelen card id sırasını birebir position değerine çeviriyoruz.
         for (TaskListOrderRequest taskListRequest : requestedTaskLists) {
             TaskList taskList = taskListsById.get(taskListRequest.taskListId());
 
@@ -90,13 +134,6 @@ public class TaskListService {
                 card.setPosition(index + 1);
             }
         }
-
-        cardRepository.saveAllAndFlush(affectedCards);
     }
 
-    private void assignTemporaryPositions(List<Card> cards) {
-        for (int index = 0; index < cards.size(); index++) {
-            cards.get(index).setPosition(-(index + 1));
-        }
-    }
 }
