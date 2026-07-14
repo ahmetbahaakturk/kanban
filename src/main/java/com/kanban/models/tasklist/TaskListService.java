@@ -61,9 +61,13 @@ public class TaskListService {
         //Frontendden gelen card idlerinin gerçekten bu tasklistlere ait olup olmadığını kontrol ediyoruz.
         validateRequestedCards(requestedTaskLists, cardsById, affectedCards.size());
 
-        //Frontendden gelen tasklist ve position düzenini doğrudan kartlara uyguluyoruz.
+        //Unique constraint cakismamasi icin kartlari once gecici pozisyonlara tasiyoruz.
+        assignTemporaryPositions(affectedCards);
+        cardRepository.saveAllAndFlush(affectedCards);
+
+        //Gecici pozisyonlardan sonra frontendin gonderdigi gercek siralamayi uyguluyoruz.
         applyRequestedOrder(requestedTaskLists, taskListsById, cardsById);
-        cardRepository.saveAll(affectedCards);
+        cardRepository.saveAllAndFlush(affectedCards);
     }
 
     private List<TaskList> findTaskLists(List<TaskListOrderRequest> requestedTaskLists) {
@@ -133,6 +137,12 @@ public class TaskListService {
                 card.setTaskList(taskList);
                 card.setPosition(index + 1);
             }
+        }
+    }
+
+    private void assignTemporaryPositions(List<Card> cards) {
+        for (int index = 0; index < cards.size(); index++) {
+            cards.get(index).setPosition(-(index + 1));
         }
     }
 
