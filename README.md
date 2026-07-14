@@ -156,3 +156,4 @@ Frontend Docker ile çalışırken bu istekler `/api` prefix'i üzerinden Nginx 
 - Veritabanı şeması Flyway migrationları ile kurulur.
 - Docker Compose akışında kalıcı veritabanı PostgreSQL'tir.
 - Lokal backend geliştirme sırasında env verilmezse H2 kullanıldığı için uygulamayı yeniden başlatınca veriler sıfırlanabilir.
+- Geliştirme adımları ve proje kazanımları için [proje geliştirme süreci dokümanına](docs/proje-gelistirme-sureci.md) bakabilirsiniz.
