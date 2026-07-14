@@ -91,6 +91,11 @@
   text-transform: uppercase;
 }
 
+.modal input + label,
+.modal textarea + label {
+  margin-top: 18px;
+}
+
 .panel input,
 .modal input,
 .modal textarea {
